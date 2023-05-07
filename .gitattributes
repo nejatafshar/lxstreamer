@@ -1,0 +1,55 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+#sources
+*.c text
+*.cc text
+*.cxx text
+*.cpp text
+*.c++ text
+*.hpp text
+*.h text
+*.h++ text
+*.hh text
+*.ipp text
+*.pro text
+*.pri text
+*.prf text
+*.ui text
+*.qrc text
+*.qml text
+*.js text
+*.ts text
+*.xml text
+*.csv text
+*.txt text
+*.sh text
+*.json text
+*.rtf text
+*.md text
+.gitignore text
+
+#binaries
+*.sqlite binary
+*.db binary
+*.qm binary
+*.ico binary
+*.png binary
+*.svg binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.tif binary
+*.tiff binary
+*.pdf binary
+*.lib binary
+*.a binary
+*.dll binary
+*.so binary
+*.ocx binary
+*.exe binary
+*.obj binary
+*.ttf binary
+*.otf binary
+*.ttc binary
+

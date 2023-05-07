@@ -1,0 +1,17 @@
+*~
+*.autosave
+.#*
+*.*#
+.DS_Store
+.directory
+Thumbs.db
+# qtcreator generated files
+*.txt.user*
+*.pro.user*
+# xemacs temporary files
+*.flc
+# Vim temporary files
+.*.swp
+
+bin/
+3rdparty/

@@ -1,0 +1,7 @@
+/****************************************************************************
+** Copyright (C) 2021-present Nejat Afshar <nejatafshar@gmail.com>
+** Distributed under the MIT License (http://opensource.org/licenses/MIT)
+**
+** This file is part of qtquick-utils.
+** A collection of handy qml components.
+****************************************************************************/
