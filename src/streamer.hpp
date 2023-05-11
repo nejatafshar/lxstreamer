@@ -22,11 +22,18 @@ class streamer
 {
 
 public:
-    streamer();
+    /// constructs a streamer to listen on <port> with an option for http/s
+    streamer(int port, bool https = false);
     ~streamer();
 
+    /// starts streamer
+    void start();
+
+    /// sets pathes for SSL certificate and key files
+    void set_ssl_cert_path(std::string cert, std::string key);
+
     /// adds a source with a args to be streamed
-    std::error_code add_source(const source_args_t&);
+    std::error_code add_source(const source_args_t& args);
 
     /// removes source <name>
     std::error_code remove_source(std::string name);

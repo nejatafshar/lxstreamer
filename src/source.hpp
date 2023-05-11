@@ -20,6 +20,8 @@ struct source final {
     explicit source(const source_args_t& args);
     ~source();
 
+    std::error_code start();
+
     const source_args_t& args() const;
 
     /// returns if it's recording

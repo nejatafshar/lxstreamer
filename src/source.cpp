@@ -23,7 +23,7 @@ struct source::impl : public source_data {
     elapsed_timer            run_elapsed_time;
     elapsed_timer            viewless_time;
 
-    impl(const source_args_t& args) : source_data(args) {
+    impl(const source_args_t& args) : source_data(args) {}
         start_worker();
     }
     ~impl() {
@@ -107,6 +107,11 @@ source::source(const source_args_t& args)
     : pimpl{std::make_unique<impl>(args)} {}
 
 source::~source() {}
+
+std::error_code
+source::start() {
+    return pimpl->start_worker();
+}
 
 const source_args_t&
 source::args() const {

@@ -11,7 +11,12 @@
 
 #include <algorithm>
 #include <chrono>
+#include <filesystem>
 #include <string>
+
+#if defined(_WIN32)
+#include <windows.h>
+#endif
 
 namespace lxstreamer {
 
@@ -73,7 +78,7 @@ to_lower(std::string str) {
 }
 
 template <typename... Args>
-std::string
+inline std::string
 format_string(const std::string& format, Args&&... args) {
     using namespace std;
     auto size =
@@ -81,6 +86,33 @@ format_string(const std::string& format, Args&&... args) {
     string output(size, '\0');
     snprintf(&output[0], size, format.c_str(), std::forward<Args>(args)...);
     return output;
+}
+
+/// other utils
+//-----------------------------------------------------------------
+
+inline std::string
+current_app_path() {
+#if defined(__linux__) || defined(__unix__) || defined(__MACH__)
+#if defined(__linux__)
+    const auto* name = program_invocation_name;
+#elif defined(__APPLE__) || defined(__FreeBSD__)
+    const auto* name = getprogname();
+#endif
+    if (name) {
+        std::error_code e;
+        const auto&     path = std::filesystem::canonical(name, e);
+        if (ec)
+            return std::string{name};
+        else
+            return path.string();
+    }
+#elif defined(_WIN32)
+    char buf[MAX_PATH];
+    GetModuleFileNameA(nullptr, buf, MAX_PATH);
+    return std::string{buf};
+#endif
+    return {};
 }
 
 } // namespace lxstreamer

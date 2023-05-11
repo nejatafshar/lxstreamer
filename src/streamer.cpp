@@ -8,34 +8,55 @@
 
 #include "streamer.hpp"
 #include "error_types.hpp"
-#include "source.hpp"
-
-#include <unordered_map>
+#include "http_server.hpp"
+#include "streamer_data.hpp"
 
 namespace lxstreamer {
 
-struct streamer::impl {
+struct streamer::impl : public streamer_data {
+    http_server server{*this};
 
-    explicit impl() {}
+    explicit impl() : streamer_data() {}
 
-    ~impl() = default;
+    ~impl() {
+        running = false;
+    }
 
     source* get_source(std::string name) {
         if (auto it = sources.find(name); it != sources.cend())
             return it->second.get();
         return nullptr;
     }
-
-    std::unordered_map<std::string, std::unique_ptr<source>> sources;
 };
 
-streamer::streamer() {}
+streamer::streamer(int port, bool https) {
+    pimpl->port  = port;
+    pimpl->https = https;
+}
+
+void
+streamer::start() {
+    if (pimpl->running)
+        return;
+    pimpl->running = true;
+    pimpl->server.start();
+    for (const auto& s : pimpl->sources)
+        s.second->start();
+}
+
+void
+streamer::set_ssl_cert_path(std::string cert, std::string key) {
+    pimpl->ssl_cert_path = cert;
+    pimpl->ssl_key_path  = key;
+}
 
 std::error_code
 streamer::add_source(const source_args_t& args) {
     if (pimpl->get_source(args.name))
         return make_err(error_t::already_exists);
     pimpl->sources.insert({args.name, std::make_unique<source>(args)});
+    if (pimpl->running)
+        pimpl->get_source(args.name)->start();
     return std::error_code{};
 }
 
