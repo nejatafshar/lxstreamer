@@ -26,8 +26,8 @@ namespace lxstreamer {
 
 struct source_data {
     source_args_t               iargs;
-    std::atomic_bool            finished{false};
-    std::atomic_bool            running{false};
+    std::atomic_bool            running{false}; // is false on class destruction
+    std::atomic_bool            demuxing{false};
     std::atomic_bool            recording{false};
     std::string                 record_path;
     std::chrono::milliseconds   wait_interval{10000};

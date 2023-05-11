@@ -24,10 +24,8 @@ struct source::impl : public source_data {
     elapsed_timer            viewless_time;
 
     impl(const source_args_t& args) : source_data(args) {}
-        start_worker();
-    }
     ~impl() {
-        finished.store(true);
+        running.store(false);
         if (worker.joinable()) {
             try {
                 worker.join();
@@ -46,11 +44,12 @@ struct source::impl : public source_data {
 
 std::error_code
 source::impl::start_worker() {
-    if (!finished.load() && !worker.joinable()) {
+    if (!running.load() && !worker.joinable()) {
+        running.store(true);
         worker = std::thread{[this]() {
-            while (!finished.load()) {
+            while (running.load()) {
                 std::this_thread::sleep_for(std::chrono::milliseconds{2000});
-                if (running || recording) {
+                if (demuxing || recording) {
                     try {
                         run();
                     } catch (std::system_error&) {
@@ -129,7 +128,7 @@ source::start_recording(std::string path) {
         return make_err(error_t::already_done);
     pimpl->record_path = path;
     pimpl->recording   = true;
-    pimpl->running     = true;
+    pimpl->demuxing    = true;
     return std::error_code{};
 }
 
@@ -155,6 +154,7 @@ source::set_speed(double speed) {
 
 std::error_code
 source::add_client() {
+    pimpl->demuxing = true;
     return std::error_code{};
 }
 

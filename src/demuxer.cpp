@@ -66,7 +66,7 @@ demuxer::run() {
     std::error_code result;
     auto&           d = *pimpl;
 
-    while (d.super.running.load(std::memory_order_relaxed)) {
+    while (d.super.demuxing.load(std::memory_order_relaxed)) {
         if (d.super.demux_data.is_local) {
             auto& st = d.super.demux_data.local_file.seek_time;
             if (auto time = st.load(std::memory_order_relaxed); time > -1) {
