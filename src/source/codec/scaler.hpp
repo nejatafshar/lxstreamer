@@ -6,10 +6,10 @@
 ** Light-weight http/s streamer.
 ****************************************************************************/
 
-#ifndef RESAMPLER_HPP
-#define RESAMPLER_HPP
+#ifndef SCALER_HPP
+#define SCALER_HPP
 
-#include "../ffmpeg_types.hpp"
+#include "ffmpeg_types.hpp"
 
 #include <list>
 #include <memory>
@@ -17,18 +17,14 @@
 namespace lxstreamer {
 struct source_data;
 
-/// resamples audio frames
-class resampler final
+/// scales video frames
+class scaler final
 {
 public:
-    explicit resampler(const source_data&);
-    ~resampler();
+    explicit scaler(const source_data&);
+    ~scaler();
 
-    std::list<frame> make_frames(
-        const AVFrame* frm, AVCodecContext* in_ctx, AVCodecContext* out_ctx);
-
-    /// prunes unused resamplers
-    void prune();
+    int perform_scale(const AVFrame* frm, int width, int height, frame& result);
 
 protected:
     struct impl;
@@ -37,4 +33,4 @@ protected:
 
 } // namespace lxstreamer
 
-#endif // RESAMPLER_HPP
+#endif // SCALER_HPP

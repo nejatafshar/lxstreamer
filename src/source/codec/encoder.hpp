@@ -9,8 +9,8 @@
 #ifndef ENCODER_HPP
 #define ENCODER_HPP
 
-#include "../common_types.hpp"
-#include "../ffmpeg_types.hpp"
+#include "common_types.hpp"
+#include "ffmpeg_types.hpp"
 
 #include <list>
 #include <memory>

@@ -6,25 +6,29 @@
 ** Light-weight http/s streamer.
 ****************************************************************************/
 
-#ifndef SCALER_HPP
-#define SCALER_HPP
+#ifndef DECODER_HPP
+#define DECODER_HPP
 
-#include "../ffmpeg_types.hpp"
+#include "ffmpeg_types.hpp"
 
 #include <list>
 #include <memory>
+#include <string>
 
 namespace lxstreamer {
 struct source_data;
 
-/// scales video frames
-class scaler final
+/// decoder for video and audio streams
+class decoder final
 {
 public:
-    explicit scaler(const source_data&);
-    ~scaler();
+    explicit decoder(const source_data&);
+    ~decoder();
 
-    int perform_scale(const AVFrame* frm, int width, int height, frame& result);
+    AVCodecContext* video_context() const;
+    AVCodecContext* audio_context() const;
+    int             initialize(const AVStream*);
+    int             decode_frames(const AVPacket*, std::list<frame_ref>&);
 
 protected:
     struct impl;
@@ -33,4 +37,4 @@ protected:
 
 } // namespace lxstreamer
 
-#endif // SCALER_HPP
+#endif // DECODER_HPP

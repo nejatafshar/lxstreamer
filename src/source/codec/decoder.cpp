@@ -8,7 +8,7 @@
 
 #include "decoder.hpp"
 #include "../source_data.hpp"
-#include "../utils.hpp"
+#include "utils.hpp"
 
 namespace lxstreamer {
 

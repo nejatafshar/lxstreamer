@@ -8,7 +8,7 @@
 
 #include "streamer.hpp"
 #include "error_types.hpp"
-#include "http_server.hpp"
+#include "server/http_server.hpp"
 #include "streamer_data.hpp"
 
 namespace lxstreamer {

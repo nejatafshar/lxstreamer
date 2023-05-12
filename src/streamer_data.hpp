@@ -9,7 +9,7 @@
 #ifndef STREAMER_DATA_HPP
 #define STREAMER_DATA_HPP
 
-#include "source.hpp"
+#include "source/source.hpp"
 
 #include <memory>
 #include <unordered_map>

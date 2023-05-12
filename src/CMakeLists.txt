@@ -6,21 +6,24 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(${PROJECT_NAME} STATIC
-  mongoose.c
-  http_server.cpp
   streamer.cpp
-  source_data.cpp
-  source.cpp
-  demuxer.cpp
-  codec/decoder.cpp
-  codec/encoder.cpp
-  codec/scaler.cpp
-  codec/transcoder.cpp
-  codec/resampler.cpp
+  server/mongoose.c
+  server/http_server.cpp
+  source/source_data.cpp
+  source/source.cpp
+  source/demuxer.cpp
+  source/codec/decoder.cpp
+  source/codec/encoder.cpp
+  source/codec/scaler.cpp
+  source/codec/transcoder.cpp
+  source/codec/resampler.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${FFMPEG_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${FFMPEG_LIBRARIES})
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE LXSTREAMER_LIBRARY)
 target_compile_definitions(${PROJECT_NAME} PUBLIC

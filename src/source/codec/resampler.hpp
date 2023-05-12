@@ -6,30 +6,29 @@
 ** Light-weight http/s streamer.
 ****************************************************************************/
 
-#ifndef DECODER_HPP
-#define DECODER_HPP
+#ifndef RESAMPLER_HPP
+#define RESAMPLER_HPP
 
-#include "../common_types.hpp"
-#include "../ffmpeg_types.hpp"
+#include "ffmpeg_types.hpp"
 
 #include <list>
 #include <memory>
-#include <string>
 
 namespace lxstreamer {
 struct source_data;
 
-/// decoder for video and audio streams
-class decoder final
+/// resamples audio frames
+class resampler final
 {
 public:
-    explicit decoder(const source_data&);
-    ~decoder();
+    explicit resampler(const source_data&);
+    ~resampler();
 
-    AVCodecContext* video_context() const;
-    AVCodecContext* audio_context() const;
-    int             initialize(const AVStream*);
-    int             decode_frames(const AVPacket*, std::list<frame_ref>&);
+    std::list<frame> make_frames(
+        const AVFrame* frm, AVCodecContext* in_ctx, AVCodecContext* out_ctx);
+
+    /// prunes unused resamplers
+    void prune();
 
 protected:
     struct impl;
@@ -38,4 +37,4 @@ protected:
 
 } // namespace lxstreamer
 
-#endif // DECODER_HPP
+#endif // RESAMPLER_HPP

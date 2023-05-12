@@ -8,7 +8,7 @@
 
 #include "resampler.hpp"
 #include "../source_data.hpp"
-#include "../utils.hpp"
+#include "utils.hpp"
 
 struct resample_config {
     AVCodecContext* src_ctx{nullptr};

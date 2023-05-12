@@ -9,14 +9,14 @@
 #ifndef TRANSCODER_HPP
 #define TRANSCODER_HPP
 
-#include "../ffmpeg_types.hpp"
-#include "encoder.hpp"
+#include "ffmpeg_types.hpp"
 
 #include <list>
 #include <memory>
 
 namespace lxstreamer {
 struct source_data;
+struct encoding_t;
 
 /// transcodes a packet or encodes a frame based on general settings and
 /// settings for each client

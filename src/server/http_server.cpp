@@ -16,6 +16,13 @@
 
 namespace lxstreamer {
 
+std::string
+to_std_string(const mg_str& str) {
+    if (str.p && str.len > 0)
+        return std::string{str.p, str.len};
+    return std::string{};
+}
+
 struct http_server::impl {
     streamer_data&          super;
     std::unique_ptr<mg_mgr> mgr{nullptr};
@@ -37,11 +44,17 @@ struct http_server::impl {
     static void http_callback(mg_connection* mc, int ev, void* opaque) {
         if (ev == MG_EV_HTTP_REQUEST) {
             auto msg = reinterpret_cast<http_message*>(opaque);
-            if (std::string{msg->method.p, msg->method.len} != "GET") {
+            if (to_std_string(msg->method) != "GET") {
                 mc->flags |= MG_F_SEND_AND_CLOSE;
                 return;
             }
             auto* self = reinterpret_cast<impl*>(mc->listener->user_data);
+            auto  uri  = to_std_string(msg->uri);
+            if (uri == "/stream") {
+            } else {
+                mc->flags |= MG_F_SEND_AND_CLOSE;
+                return;
+            }
         } else if (ev == MG_EV_CLOSE) {
         }
     }

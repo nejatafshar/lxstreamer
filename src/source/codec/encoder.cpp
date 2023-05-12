@@ -8,7 +8,7 @@
 
 #include "encoder.hpp"
 #include "../source_data.hpp"
-#include "../utils.hpp"
+#include "utils.hpp"
 
 extern "C" {
 #include <libavutil/opt.h>
