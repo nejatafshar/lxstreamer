@@ -106,7 +106,7 @@ http_server::impl::setup() {
     if (super.https) {
         namespace fs = std::filesystem;
         if (super.ssl_cert_path.empty())
-            super.ssl_cert_path = super.ssl_key_path =
+            super.ssl_cert_path =
                 (fs::path{current_app_path()}.parent_path() / "server.pem")
                     .string();
         if (super.ssl_key_path.empty())

@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(lxstreamer LANGUAGES CXX)
+project(lxstreamer
+    VERSION 1.0.0
+    LANGUAGES C CXX
+    )
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")

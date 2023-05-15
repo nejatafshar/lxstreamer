@@ -12,8 +12,6 @@
 #include "socket_utils.hpp"
 #include "writer_base.hpp"
 
-struct mg_connection;
-
 namespace lxstreamer {
 
 struct uri_data_t;

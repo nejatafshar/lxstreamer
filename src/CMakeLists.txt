@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(lxstreamer LANGUAGES CXX)
+project(lxstreamer LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -36,14 +36,15 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     )
 
 # linking to FFmpeg
-target_include_directories(${PROJECT_NAME} PUBLIC ${FFMPEG_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${FFMPEG_LIBRARIES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${FFMPEG_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${FFMPEG_LIBRARIES})
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC
     MG_ENABLE_MQTT=0
     MG_ENABLE_HTTP_WEBSOCKET=0
-    MG_ENABLE_BROADCAST=0
+    MG_ENABLE_BROADCAST
     MG_ENABLE_GETADDRINFO
+    MG_ENABLE_HTTP_STREAMING_MULTIPART=0
     MG_HIDE_SERVER_INFO
     )
 

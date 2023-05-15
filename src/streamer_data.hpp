@@ -17,8 +17,6 @@
 #include <memory>
 #include <unordered_map>
 
-struct mg_connection;
-
 namespace lxstreamer {
 
 struct streamer_data {
