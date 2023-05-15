@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(${PROJECT_NAME} STATIC
   streamer.cpp
-  server/mongoose.c
   server/http_server.cpp
   source/source_data.cpp
   source/source.cpp
@@ -39,7 +38,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 target_include_directories(${PROJECT_NAME} PRIVATE ${FFMPEG_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${FFMPEG_LIBRARIES})
 
-target_compile_definitions(${PROJECT_NAME} PUBLIC
+# adding mongoose
+add_library(mongoose_lib OBJECT server/mongoose.c)
+if(MSVC)
+    target_compile_options(mongoose_lib PRIVATE /W0)
+endif()
+target_compile_definitions(mongoose_lib PUBLIC
     MG_ENABLE_MQTT=0
     MG_ENABLE_HTTP_WEBSOCKET=0
     MG_ENABLE_BROADCAST
@@ -47,10 +51,12 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
     MG_ENABLE_HTTP_STREAMING_MULTIPART=0
     MG_HIDE_SERVER_INFO
     )
+target_sources(${PROJECT_NAME} PRIVATE $<TARGET_OBJECTS:mongoose_lib>)
 
 # linking to OpenSSL
 if(HTTPS)
     target_include_directories(${PROJECT_NAME} PRIVATE ${DIR_3RDPARTIES}/openssl/include)
     target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::SSL OpenSSL::Crypto)
+    target_include_directories(mongoose_lib PRIVATE ${DIR_3RDPARTIES}/openssl/include)
 endif()
 
