@@ -15,6 +15,8 @@
 #include "codec/scaler.hpp"
 #include "demuxer_data.hpp"
 #include "ffmpeg_types.hpp"
+#include "streamer_data.hpp"
+#include "write/viewer.hpp"
 
 #include <chrono>
 #include <memory>
@@ -25,25 +27,29 @@
 namespace lxstreamer {
 
 struct source_data {
-    source_args_t               iargs;
-    std::atomic_bool            running{false}; // is false on class destruction
-    std::atomic_bool            demuxing{false};
-    std::atomic_bool            recording{false};
-    std::string                 record_path;
-    std::chrono::milliseconds   wait_interval{10000};
-    unique_ptr<AVFormatContext> input_ctx;
-    const AVInputFormat*        input_format{nullptr};
-    demuxer_data                demux_data;
-    bool                        is_webcam{false};
-    decoder                     idecoder{*this};
-    encoder                     iencoder{*this};
-    scaler                      iscaler{*this};
-    resampler                   iresampler{*this};
-    encoder_config              view_encoding;
-    encoder_config              record_encoding;
+    const streamer_data& super;
+    source_args_t        iargs;
+    std::atomic_bool     running{false}; // is false on class destruction
+    std::atomic_bool     demuxing{false};
+    std::atomic_bool     recording{false};
+    std::string          record_path;
+    std::list<std::unique_ptr<viewer>> viewers;
+    container_t                        container{container_t::unknown};
+    std::chrono::milliseconds          wait_interval{10000};
+    unique_ptr<AVFormatContext>        input_ctx;
+    const AVInputFormat*               input_format{nullptr};
+    demuxer_data                       demux_data;
+    bool                               is_webcam{false};
+    decoder                            idecoder{*this};
+    encoder                            iencoder{*this};
+    scaler                             iscaler{*this};
+    resampler                          iresampler{*this};
+    encoder_config                     view_encoding;
+    encoder_config                     record_encoding;
 
 
-    explicit source_data(const source_args_t& args) : iargs{args} {}
+    explicit source_data(const streamer_data& s, const source_args_t& args)
+        : super{s}, iargs{args} {}
 
     /// a callback that is called when source is opened
     virtual void on_open() = 0;

@@ -7,21 +7,47 @@
 ****************************************************************************/
 
 #include "http_server.hpp"
-#include "mongoose.h"
 #include "streamer_data.hpp"
-#include "utils.hpp"
 
 #include <filesystem>
 #include <thread>
 
 namespace lxstreamer {
 
-std::string
-to_std_string(const mg_str& str) {
-    if (str.p && str.len > 0)
-        return std::string{str.p, str.len};
-    return std::string{};
+namespace {
+
+enum class http_error_t {
+    ok                    = 200,
+    bad_request           = 400,
+    unauthorized          = 401,
+    forbidden             = 403,
+    not_found             = 404,
+    method_not_allowed    = 405,
+    request_timeout       = 408,
+    conflict              = 409,
+    unsupported_media     = 415,
+    internal_server_error = 500,
+    not_implemented       = 501,
+    bad_gateway           = 502,
+    service_unavailable   = 503,
+};
+
+inline static std::unordered_map<error_t, http_error_t> ErrorMap = {
+    {error_t::success, http_error_t::ok},
+    {error_t::authentication_failed, http_error_t::unauthorized},
+    {error_t::not_found, http_error_t::not_found},
+    {error_t::not_ready, http_error_t::forbidden},
+};
+
+http_error_t
+to_http_error(const std::error_code& ec) {
+    if (const auto& err = ErrorMap.find(static_cast<error_t>(ec.value()));
+        err != ErrorMap.cend())
+        return err->second;
+    return http_error_t::bad_request;
 }
+
+} // namespace
 
 struct http_server::impl {
     streamer_data&          super;
@@ -51,6 +77,15 @@ struct http_server::impl {
             auto* self = reinterpret_cast<impl*>(mc->listener->user_data);
             auto  uri  = to_std_string(msg->uri);
             if (uri == "/stream") {
+                auto ec = self->super.make_stream(
+                    mc,
+                    to_std_string(msg->uri),
+                    to_std_string(msg->query_string));
+                if (ec) {
+                    mg_http_send_error(
+                        mc, static_cast<int>(to_http_error(ec)), nullptr);
+                    mc->flags |= MG_F_SEND_AND_CLOSE;
+                }
             } else {
                 mc->flags |= MG_F_SEND_AND_CLOSE;
                 return;

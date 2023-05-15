@@ -23,7 +23,8 @@ struct source::impl : public source_data {
     elapsed_timer            run_elapsed_time;
     elapsed_timer            viewless_time;
 
-    impl(const source_args_t& args) : source_data(args) {}
+    impl(const streamer_data& s, const source_args_t& args)
+        : source_data(s, args) {}
     ~impl() {
         running.store(false);
         if (worker.joinable()) {
@@ -70,15 +71,18 @@ source::impl::run() {
 
     idemuxer->run();
 
+    viewers.clear();
+
     idemuxer.reset();
 }
 
 void
 source::impl::on_open() {
-    if (is_video(iargs.video_encoding) || is_webcam) {
-        view_encoding.video.codec         = iargs.video_encoding.codec;
-        view_encoding.video.height        = iargs.video_encoding.height;
-        view_encoding.video.max_bandwidth = iargs.video_encoding.max_bandwidth;
+    if (is_video(iargs.video_encoding_view) || is_webcam) {
+        view_encoding.video.codec  = iargs.video_encoding_view.codec;
+        view_encoding.video.height = iargs.video_encoding_view.height;
+        view_encoding.video.max_bandwidth =
+            iargs.video_encoding_view.max_bandwidth;
         init_resolution(
             view_encoding.video,
             demux_data.video_stream.stream->codecpar->width,
@@ -86,24 +90,56 @@ source::impl::on_open() {
     } else
         view_encoding.video.codec = codec_t::unknown;
 
-    if (is_audio(iargs.audio_encoding)) {
-        view_encoding.audio.codec       = iargs.audio_encoding.codec;
-        view_encoding.audio.sample_rate = iargs.audio_encoding.sample_rate;
-        view_encoding.audio.sample_fmt  = iargs.audio_encoding.sample_fmt;
+    if (is_audio(iargs.audio_encoding_view)) {
+        view_encoding.audio.codec       = iargs.audio_encoding_view.codec;
+        view_encoding.audio.sample_rate = iargs.audio_encoding_view.sample_rate;
+        view_encoding.audio.sample_fmt  = iargs.audio_encoding_view.sample_fmt;
         view_encoding.audio.channel_layout =
-            iargs.audio_encoding.channel_layout;
+            iargs.audio_encoding_view.channel_layout;
     } else
         view_encoding.audio.codec = codec_t::unknown;
 }
 
 void
-source::impl::on_packet(const AVPacket* pkt) {}
+source::impl::on_packet(const AVPacket* pkt) {
+    transcoder tc{*this, pkt};
+
+    for (auto iter = viewers.begin(); iter != viewers.end();) {
+        const auto& packets = tc.make_packets(
+            pkt->stream_index == demux_data.video_stream.stream_idx
+                ? view_encoding.video
+                : view_encoding.audio);
+        int nret = 0;
+        for (const auto& p : packets) {
+            nret = iter->get()->write_packet(p.get());
+            if (nret < 0)
+                break;
+        }
+        if (nret < 0) {
+            iter = viewers.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+
+    if (run_elapsed_time.seconds() > 5) {
+        if (viewers.empty()) {
+            if (viewless_time.seconds() > 30 && !recording)
+                demuxing = false;
+        } else
+            viewless_time.start();
+
+        iencoder.prune();
+        iresampler.prune();
+        run_elapsed_time.start();
+    }
+}
 
 void
 source::impl::start_recording() {}
 
-source::source(const source_args_t& args)
-    : pimpl{std::make_unique<impl>(args)} {}
+source::source(const streamer_data& s, const source_args_t& args)
+    : pimpl{std::make_unique<impl>(s, args)} {}
 
 source::~source() {}
 
@@ -153,8 +189,9 @@ source::set_speed(double speed) {
 }
 
 std::error_code
-source::add_client() {
+source::add_viewer(std::unique_ptr<viewer> v) {
     pimpl->demuxing = true;
+    pimpl->viewers.emplace_back(std::move(v));
     return std::error_code{};
 }
 

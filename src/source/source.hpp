@@ -16,8 +16,11 @@
 
 namespace lxstreamer {
 
+class viewer;
+struct streamer_data;
+
 struct source final {
-    explicit source(const source_args_t& args);
+    explicit source(const streamer_data&, const source_args_t&);
     ~source();
 
     std::error_code start();
@@ -38,7 +41,7 @@ struct source final {
     std::error_code set_speed(double speed);
 
     /// adds a client for streaming
-    std::error_code add_client();
+    std::error_code add_viewer(std::unique_ptr<viewer> v);
 
 protected:
     struct impl;

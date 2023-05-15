@@ -73,7 +73,6 @@ make_err(error_t err) {
     return std::make_error_code(static_cast<std::errc>(err));
 }
 
-
 } // namespace lxstreamer
 
 #endif // ERROR_TYPES_HPP

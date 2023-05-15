@@ -9,6 +9,8 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
+#include "server/mongoose.h"
+
 #include <algorithm>
 #include <chrono>
 #include <filesystem>
@@ -86,6 +88,38 @@ format_string(const std::string& format, Args&&... args) {
     string output(size, '\0');
     snprintf(&output[0], size, format.c_str(), std::forward<Args>(args)...);
     return output;
+}
+
+inline std::string
+query_value(std::string query, std::string key) {
+    size_t key_start = -1;
+    if (auto k = query.find(key, 0); k != std::string::npos)
+        key_start = k;
+    else
+        return std::string{};
+
+    auto key_end      = key_start + key.size();
+    auto equation_pos = query.find('=', key_end);
+    if (equation_pos != key_end)
+        return std::string{};
+    auto value_end = query.find('&', equation_pos);
+    if (value_end == std::string::npos)
+        value_end = query.size() - 1;
+    else
+        --value_end;
+    if (value_end > equation_pos) {
+        auto value_start = equation_pos + 1;
+        auto value_size  = value_end - equation_pos;
+        return query.substr(value_start, value_size);
+    }
+    return std::string{};
+}
+
+inline std::string
+to_std_string(const mg_str& str) {
+    if (str.p && str.len > 0)
+        return std::string{str.p, str.len};
+    return std::string{};
 }
 
 /// other utils

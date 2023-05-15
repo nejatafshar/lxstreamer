@@ -13,10 +13,10 @@
 
 namespace lxstreamer {
 
-enum class transport_format_t {
-    mpegts   = 1,
-    flv      = 2,
-    matroska = 3,
+enum class container_t {
+    matroska = 1,
+    mpegts   = 2,
+    flv      = 3,
     unknown  = -1,
 };
 
@@ -69,12 +69,19 @@ is_audio(encoding_t enc) {
     return is_valid(enc) && enc.codec >= codec_t::ac3;
 }
 
-/// arguments for source to be added
+// arguments for source to be added
 struct source_args_t {
-    std::string name;
-    std::string url;
-    encoding_t  video_encoding;
-    encoding_t  audio_encoding;
+    std::string name;         ///< a unique name for source
+    std::string url;          ///< source url
+    std::string auth_session; ///< a string to be provided in uri query by
+                              ///< <session> field for stream authentication
+    encoding_t  video_encoding_view; ///< optional video encoding for streaming
+    encoding_t  audio_encoding_view; ///< optional audio encoding for streaming
+    encoding_t  video_encoding_rec;  ///< optional video encoding for recording
+    encoding_t  audio_encoding_rec;  ///< optional audio encoding for recording
+    container_t container{
+        container_t::unknown}; ///< preferred container format, automatically
+                               ///< chosen if not defined
 };
 
 } // namespace lxstreamer

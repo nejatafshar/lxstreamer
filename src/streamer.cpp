@@ -16,20 +16,15 @@ namespace lxstreamer {
 struct streamer::impl : public streamer_data {
     http_server server{*this};
 
-    explicit impl() : streamer_data() {}
+    explicit impl(int port, bool https) : streamer_data{port, https} {}
 
     ~impl() {
         running = false;
     }
-
-    source* get_source(std::string name) {
-        if (auto it = sources.find(name); it != sources.cend())
-            return it->second.get();
-        return nullptr;
-    }
 };
 
-streamer::streamer(int port, bool https) {
+streamer::streamer(int port, bool https)
+    : pimpl{std::make_unique<impl>(port, https)} {
     pimpl->port  = port;
     pimpl->https = https;
 }
@@ -54,7 +49,7 @@ std::error_code
 streamer::add_source(const source_args_t& args) {
     if (pimpl->get_source(args.name))
         return make_err(error_t::already_exists);
-    pimpl->sources.insert({args.name, std::make_unique<source>(args)});
+    pimpl->sources.insert({args.name, std::make_unique<source>(*pimpl, args)});
     if (pimpl->running)
         pimpl->get_source(args.name)->start();
     return std::error_code{};
