@@ -9,12 +9,14 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
+#include "common_types.hpp"
 #include "server/mongoose.h"
 
 #include <algorithm>
 #include <chrono>
 #include <filesystem>
-#include <string>
+#include <functional>
+#include <mutex>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -120,6 +122,55 @@ to_std_string(const mg_str& str) {
     if (str.p && str.len > 0)
         return std::string{str.p, str.len};
     return std::string{};
+}
+
+/// logging
+//-----------------------------------------------------------------
+
+inline std::mutex                       log_mutex;
+inline log_level_t                      log_level{log_level_t::info};
+inline bool                             log_to_stdout = true;
+inline std::function<void(std::string)> log_cb{nullptr};
+
+template <log_level_t level, typename... Args>
+inline void
+log(const std::string& str, Args&&... args) {
+    std::scoped_lock lock{log_mutex};
+    if (level < log_level)
+        return;
+    if (log_to_stdout) {
+        auto out = level >= log_level_t::error ? stderr : stdout;
+        fprintf(out, str.c_str(), std::forward<Args>(args)...);
+        fprintf(out, "\n");
+    }
+    if (log_cb)
+        log_cb(format_string(str, std::forward<Args>(args)...));
+}
+
+template <typename... Args>
+inline void
+logTrace(const std::string& str, Args&&... args) {
+    log<log_level_t::trace>(str, std::forward<Args>(args)...);
+}
+template <typename... Args>
+inline void
+logInfo(const std::string& str, Args&&... args) {
+    log<log_level_t::info>(str, std::forward<Args>(args)...);
+}
+template <typename... Args>
+inline void
+logWarn(const std::string& str, Args&&... args) {
+    log<log_level_t::warning>(str, std::forward<Args>(args)...);
+}
+template <typename... Args>
+inline void
+logError(const std::string& str, Args&&... args) {
+    log<log_level_t::error>(str, std::forward<Args>(args)...);
+}
+template <typename... Args>
+inline void
+logFatal(const std::string& str, Args&&... args) {
+    log<log_level_t::fatal>(str, std::forward<Args>(args)...);
 }
 
 /// other utils

@@ -13,6 +13,15 @@
 
 namespace lxstreamer {
 
+enum class log_level_t {
+    trace   = 0,
+    info    = 1,
+    warning = 2,
+    error   = 3,
+    fatal   = 4,
+    off     = 5,
+};
+
 enum class container_t {
     matroska = 1,
     mpegts   = 2,

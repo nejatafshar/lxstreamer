@@ -11,6 +11,7 @@
 
 #include "common_types.hpp"
 
+#include <functional>
 #include <list>
 #include <memory>
 #include <string>
@@ -52,6 +53,13 @@ public:
 
     /// sets playback speed for source <name> if it's a file
     std::error_code set_speed(std::string name, double speed);
+
+    /// sets log verbosity, default value is log_level_t::info
+    static void set_log_level(log_level_t level);
+    /// sets whether logs should be printed to std output, default is true
+    static void set_log_to_stdout(bool flag);
+    /// sets a function to be called with log strings as argument
+    static void set_log_callback(std::function<void(std::string)> callback);
 
 private:
     struct impl;

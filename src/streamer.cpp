@@ -103,6 +103,24 @@ streamer::set_speed(std::string name, double speed) {
     return src->set_speed(speed);
 }
 
+void
+streamer::set_log_level(log_level_t level) {
+    std::scoped_lock lock{log_mutex};
+    log_level = level;
+}
+
+void
+streamer::set_log_to_stdout(bool flag) {
+    std::scoped_lock lock{log_mutex};
+    log_to_stdout = flag;
+}
+
+void
+streamer::set_log_callback(std::function<void(std::string)> callback) {
+    std::scoped_lock lock{log_mutex};
+    log_cb = std::move(callback);
+}
+
 streamer::~streamer() = default;
 
 } // namespace lxstreamer
