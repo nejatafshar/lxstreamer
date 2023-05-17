@@ -112,6 +112,9 @@ source::impl::on_open() {
             iargs.audio_encoding_view.channel_layout;
     } else
         view_encoding.audio.codec = codec_t::unknown;
+
+    for (const auto& v : viewers)
+        v->start();
 }
 
 void
@@ -210,8 +213,8 @@ std::error_code
 source::add_viewer(std::unique_ptr<viewer> v) {
     if (auto ec = v->init(pimpl.get()); ec)
         return ec;
-    pimpl->demuxing = true;
     pimpl->viewers.emplace_back(std::move(v));
+    pimpl->demuxing = true;
     return std::error_code{};
 }
 

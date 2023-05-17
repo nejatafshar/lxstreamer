@@ -36,6 +36,7 @@ public:
     ~viewer();
 
     std::error_code init(source_data*);
+    void            start();
 
     int write_packet(const AVPacket*);
 

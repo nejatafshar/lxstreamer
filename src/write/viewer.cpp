@@ -29,9 +29,7 @@ struct viewer::impl : public viewer_data {
 
 public:
     explicit impl(const uri_data_t& ud, mg_connection* mc)
-        : viewer_data{ud, mc} {
-        start_worker();
-    }
+        : viewer_data{ud, mc} {}
 
     ~impl() {
         running = false;
@@ -53,12 +51,10 @@ public:
     void start_worker() {
         worker = std::thread{[this]() {
             if (setup_output()) {
-                running = true;
-                while (running.load(std::memory_order_relaxed)) {
+                while (running.load()) {
                     std::unique_lock<std::mutex> lock(mutex);
                     cv.wait(lock, [&] {
-                        return !running.load(std::memory_order_relaxed) ||
-                               !queue.empty();
+                        return !running.load() || !queue.empty();
                     });
                     if (!queue.empty()) {
                         const auto pkt = queue.front().get();
@@ -85,6 +81,12 @@ viewer::init(source_data* s) {
         return make_err(error_t::invalid_argument);
     pimpl->sd = s;
     return pimpl->init_io();
+}
+
+void
+viewer::start() {
+    pimpl->running = true;
+    pimpl->start_worker();
 }
 
 int
