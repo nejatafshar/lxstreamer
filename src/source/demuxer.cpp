@@ -92,10 +92,14 @@ demuxer::run() {
         }
         auto       time_point = std::chrono::steady_clock::now();
         const auto nret       = d.process_next_packet();
-        if (!d.super.demux_data.should_present_faster())
+        if (nret >= 0) {
+            if (!d.super.demux_data.should_present_faster())
+                std::this_thread::sleep_until(
+                    time_point + std::chrono::milliseconds{2});
+        } else if (nret == AVERROR(EAGAIN)) {
             std::this_thread::sleep_until(
-                time_point + std::chrono::milliseconds{2});
-        if (nret < 0) {
+                time_point + std::chrono::milliseconds{5});
+        } else if (nret < 0) {
             result = ffmpeg_make_err(nret);
             break; // stop demuxing
         }
