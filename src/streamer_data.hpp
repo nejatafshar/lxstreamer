@@ -52,13 +52,12 @@ struct streamer_data {
                 return make_err(error_t::authentication_failed);
             }
             auto v = std::make_unique<viewer>(uri_data, mc);
-            if (auto ec = v->init(); ec) {
+            if (auto ec = src->add_viewer(std::move(v)); ec) {
                 logInfo(
                     "failed to initialize viewer for src: %s",
                     uri_data.source_name);
                 return ec;
             }
-            src->add_viewer(std::move(v));
             return std::error_code{};
         }
         return make_err(error_t::not_found);

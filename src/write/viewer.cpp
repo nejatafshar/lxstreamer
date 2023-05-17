@@ -80,7 +80,10 @@ viewer::viewer(const uri_data_t& ud, mg_connection* mc)
 viewer::~viewer() {}
 
 std::error_code
-viewer::init() {
+viewer::init(source_data* s) {
+    if (!s)
+        return make_err(error_t::invalid_argument);
+    pimpl->sd = s;
     return pimpl->init_io();
 }
 

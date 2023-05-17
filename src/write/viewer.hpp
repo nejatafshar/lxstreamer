@@ -15,6 +15,7 @@
 
 struct AVPacket;
 struct mg_connection;
+struct source_data;
 
 namespace lxstreamer {
 
@@ -34,7 +35,7 @@ public:
 
     ~viewer();
 
-    std::error_code init();
+    std::error_code init(source_data*);
 
     int write_packet(const AVPacket*);
 

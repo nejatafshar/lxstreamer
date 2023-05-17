@@ -208,6 +208,8 @@ source::set_speed(double speed) {
 
 std::error_code
 source::add_viewer(std::unique_ptr<viewer> v) {
+    if (auto ec = v->init(pimpl.get()); ec)
+        return ec;
     pimpl->demuxing = true;
     pimpl->viewers.emplace_back(std::move(v));
     return std::error_code{};
