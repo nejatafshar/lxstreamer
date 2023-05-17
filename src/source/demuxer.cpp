@@ -22,10 +22,22 @@ struct demuxer::impl {
     ~impl() = default;
 
     int open_stream() {
-        if (auto ret = super.load_input(); ret != 0)
+        if (auto ret = super.load_input(); ret != 0) {
+            logError(
+                "failed to open stream: src: %s err: %d, %s",
+                super.iargs.name,
+                ret,
+                ffmpeg_make_error_string(ret));
             return ret;
-        if (auto ret = super.find_info(); ret != 0)
+        }
+        if (auto ret = super.find_info(); ret != 0) {
+            logError(
+                "failed to find info for streams: src: %s err: %d, %s",
+                super.iargs.name,
+                ret,
+                ffmpeg_make_error_string(ret));
             return ret;
+        }
 
         super.on_open();
 
@@ -43,9 +55,13 @@ struct demuxer::impl {
             }
         } else if (nret == AVERROR(EAGAIN)) {
         } else if (nret == AVERROR_EOF && super.demux_data.is_local) {
-            // end of local file
+            logInfo("local file reached to end: src: %s", super.iargs.name);
         } else if (nret < 0) {
-            // failed to read packet
+            logError(
+                "failed to read packet: src: %s err: %d, %s",
+                super.iargs.name,
+                nret,
+                ffmpeg_make_error_string(nret));
         }
         return nret;
     }
@@ -84,6 +100,11 @@ demuxer::run() {
             break; // stop demuxing
         }
     }
+    logInfo(
+        "finished demuxing: src: %s err: %d, %s",
+        d.super.iargs.name,
+        result.value(),
+        result.message());
     return result;
 }
 

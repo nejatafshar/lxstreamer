@@ -87,6 +87,7 @@ struct http_server::impl {
                     mc->flags |= MG_F_SEND_AND_CLOSE;
                 }
             } else {
+                logWarn("http server: unknown api: %s", uri);
                 mc->flags |= MG_F_SEND_AND_CLOSE;
                 return;
             }
@@ -130,18 +131,21 @@ http_server::impl::setup() {
         listener =
             mg_bind_opt(mgr.get(), address.data(), http_callback, bind_opts);
         if (listener == nullptr) {
-            // failed to bind
+            logFatal(
+                "http server: failed to listen on: %s err: %s", address, err);
             return false;
         }
         listener->user_data = this;
     } else {
         listener = mg_bind(mgr.get(), address.data(), http_callback);
         if (listener == nullptr) {
-            // failed to bind
+            logFatal("http server: failed to listen on: %s", address);
             return false;
         }
         listener->user_data = this;
     }
+
+    logInfo("http server listening on port: %d", super.port);
 
     return true;
 }
@@ -153,6 +157,7 @@ http_server::start() {
         while (pimpl->super.running) {
             mg_mgr_poll(pimpl->mgr.get(), 300);
         }
+        logInfo("http server finished");
     }};
 }
 

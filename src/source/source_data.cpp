@@ -41,7 +41,10 @@ source_data::load_input() {
         if (!video_framework.empty()) {
             input_format = av_find_input_format(video_framework.data());
             if (!input_format) {
-                // unknown format
+                logError(
+                    "webcam unknown format: src: %s format: %s",
+                    iargs.name,
+                    video_framework);
             }
             str       = device_name;
             is_webcam = true;
@@ -54,9 +57,9 @@ source_data::load_input() {
     std::error_code ec;
     demux_data.is_local = std::filesystem::is_regular_file(iargs.url, ec);
     if (input_format) {
-        // is webcam
+        logTrace("webcam detected: src: %s", iargs.name);
     } else if (demux_data.is_local) {
-        // is local file
+        logTrace("local file detected: src: %s", iargs.name);
     } else {
         options.set("threads", 1, 0);
         if (to_lower(iargs.url).rfind("rtsp:", 0) == 0)

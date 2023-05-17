@@ -138,7 +138,12 @@ resampler::impl::init_filters(filter_data& fd) {
         return ret;
 
     if (ret = avfilter_graph_config(graph, nullptr); ret < 0) {
-        // filter graph is not valid
+        logError(
+            "resample: invalid filter graph: src: %s err:%d, %s",
+            super.iargs.name,
+            ret,
+            ffmpeg_make_error_string(ret));
+        logTrace("filter graph dot description:\n %s", get_digraph(graph));
     }
 
     avfilter_inout_free(&unlinked_inputs);
@@ -166,6 +171,10 @@ resampler::impl::make_frames(
 
     if (!fd.buffersink_ctx) {
         if (auto ec = init_filters(fd); ec < 0) {
+            logError(
+                "resample: failed to initialize filters: src: %s err:%d",
+                super.iargs.name,
+                ec);
             return {};
         }
     }
@@ -173,10 +182,16 @@ resampler::impl::make_frames(
     fd.tt.start();
 
     /* push source frame into the filtergraph */
-    if (av_buffersrc_add_frame_flags(
+    if (auto ret = av_buffersrc_add_frame_flags(
             fd.buffersrc_ctx,
             const_cast<AVFrame*>(src),
-            AV_BUFFERSRC_FLAG_PUSH | AV_BUFFERSRC_FLAG_KEEP_REF) < 0) {
+            AV_BUFFERSRC_FLAG_PUSH | AV_BUFFERSRC_FLAG_KEEP_REF);
+        ret < 0) {
+        logError(
+            "resample: failed to initialize filters: src: %s err:%d, %s",
+            super.iargs.name,
+            ret,
+            ffmpeg_make_error_string(ret));
         return {};
     }
 
@@ -211,6 +226,9 @@ resampler::make_frames(
     const AVFrame* frm, AVCodecContext* in_ctx, AVCodecContext* out_ctx) {
     resample_config config{in_ctx, out_ctx};
     if (!in_ctx || !out_ctx) {
+        logError(
+            "resample: invalid AVCodecContext: src: %s",
+            pimpl->super.iargs.name);
         return {};
     }
     return pimpl->make_frames(frm, config);

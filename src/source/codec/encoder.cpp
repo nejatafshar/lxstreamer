@@ -207,13 +207,33 @@ encoder::impl::set_encoder_video_settings(
         "b",
         maxBitrate / (super.is_webcam ? 4 : 2),
         AV_OPT_SEARCH_CHILDREN);
+    if (ret != 0)
+        logError(
+            "failed setting encoder parameter <b> err:%d, %s",
+            ret,
+            ffmpeg_make_error_string(ret));
 
     ret = av_opt_set_int(
         codec_ctx, "maxrate", maxBitrate, AV_OPT_SEARCH_CHILDREN);
+    if (ret != 0)
+        logError(
+            "failed setting encoder parameter <maxrate> err:%d, %s",
+            ret,
+            ffmpeg_make_error_string(ret));
 
     av_opt_set_int(codec_ctx, "minrate", 1000, AV_OPT_SEARCH_CHILDREN);
+    if (ret != 0)
+        logError(
+            "failed setting encoder parameter <minrate> err:%d, %s",
+            ret,
+            ffmpeg_make_error_string(ret));
 
     ret = av_opt_set_int(codec_ctx, "bufsize", bufSize, AV_OPT_SEARCH_CHILDREN);
+    if (ret != 0)
+        logError(
+            "failed setting encoder parameter <bufsize> err:%d, %s",
+            ret,
+            ffmpeg_make_error_string(ret));
 
     auto dec_ctx = super.idecoder.video_context();
     if (!dec_ctx)
@@ -270,7 +290,10 @@ encoder::impl::set_encoder_audio_settings(
         if (auto ret = select_channel_layout(
                 codec, &codec_ctx->ch_layout, &dec_ctx->ch_layout);
             ret < 0) {
-            // Failed to select audio chanel layout
+            logError(
+                "failed to select encoder audio channel layout err:%d, %s",
+                ret,
+                ffmpeg_make_error_string(ret));
         }
 
     codec_ctx->sample_fmt = AV_SAMPLE_FMT_NONE;
@@ -293,8 +316,15 @@ encoder::impl::encode_packets(
     const AVFrame*         frm,
     std::list<packet_ref>& packets) {
     auto ret = avcodec_send_frame(enc_ctx, frm);
-    if (ret < 0)
+    if (ret < 0) {
+        logError(
+            "encoding failed: src: %s err: %d, %s",
+            super.iargs.name,
+            ret,
+            ffmpeg_make_error_string(ret));
         return ret;
+        return ret;
+    }
 
     while (ret >= 0) {
         packet pkt;
@@ -340,10 +370,14 @@ encoder::initialize(const encoding_t& config, const AVFormatContext* octx) {
     encoder_struct enc;
     enc.encoder = get_encoder(config.codec);
     if (!enc.encoder) {
+        logError("encoder not found: src: %s", pimpl->super.iargs.name);
         return AVERROR_INVALIDDATA;
     }
     auto* codec_ctx = avcodec_alloc_context3(enc.encoder);
     if (!codec_ctx) {
+        logError(
+            "failed to allocate encoder context: src: %s",
+            pimpl->super.iargs.name);
         return AVERROR(ENOMEM);
     }
 
@@ -360,6 +394,11 @@ encoder::initialize(const encoding_t& config, const AVFormatContext* octx) {
     /* Third parameter can be used to pass settings to encoder */
     auto ret = avcodec_open2(codec_ctx, enc.encoder, nullptr);
     if (ret < 0) {
+        logError(
+            "failed opening encoder: src: %s err: %d, %s",
+            pimpl->super.iargs.name,
+            ret,
+            ffmpeg_make_error_string(ret));
         return ret;
     }
 

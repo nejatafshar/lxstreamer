@@ -30,7 +30,12 @@ struct source::impl : public source_data {
         if (worker.joinable()) {
             try {
                 worker.join();
-            } catch (std::system_error&) {
+            } catch (std::system_error& e) {
+                logWarn(
+                    "source failed to join: src: %s addr: %s err: %d, %s",
+                    iargs.name,
+                    e.code().value(),
+                    e.what());
             }
         }
     };
@@ -53,8 +58,17 @@ source::impl::start_worker() {
                 if (demuxing || recording) {
                     try {
                         run();
-                    } catch (std::system_error&) {
-                    } catch (std::exception&) {
+                    } catch (std::system_error& e) {
+                        logFatal(
+                            "source system error: src: %s err: %d, %s",
+                            iargs.name,
+                            e.code().value(),
+                            e.what());
+                    } catch (std::exception& e) {
+                        logFatal(
+                            "source unknown error: src: %s err: %s",
+                            iargs.name,
+                            e.what());
                     }
                 }
             }
@@ -124,8 +138,12 @@ source::impl::on_packet(const AVPacket* pkt) {
 
     if (run_elapsed_time.seconds() > 5) {
         if (viewers.empty()) {
-            if (viewless_time.seconds() > 30 && !recording)
+            if (viewless_time.seconds() > 30 && !recording) {
                 demuxing = false;
+                logTrace(
+                    "source stalled due to not having any viewer: src: %s",
+                    iargs.name);
+            }
         } else
             viewless_time.start();
 

@@ -98,7 +98,7 @@ viewer_data::init_io() {
     auto ptr      = avio_alloc_context(
         buf, buf_size, 1, this, nullptr, write_callback, nullptr);
     if (ptr == nullptr) {
-        // failed to create avio context
+        logFatal("failed to alloc avio context: src: %s", sd->iargs.name);
         return make_err(error_t::bad_state);
     }
     io.reset(ptr);
@@ -110,6 +110,9 @@ viewer_data::init_io() {
     connection->flags |= MG_F_CLOSE_IMMEDIATELY;
 
     set_blocking(write_sock);
+
+    logTrace(
+        "viewer client connected: src: %s addr: %s", sd->iargs.name, address);
 
     return std::error_code{};
 }
@@ -140,8 +143,14 @@ viewer_data::try_setup_output() {
     AVFormatContext* octx{nullptr};
     auto             ret = avformat_alloc_output_context2(
         &octx, nullptr, to_string(sd->container).c_str(), nullptr);
-    if (ret < 0 || !octx)
+    if (ret < 0 || !octx) {
+        logFatal(
+            "failed to alloc output context: src: %s err:%d, %s",
+            sd->iargs.name,
+            ret,
+            ffmpeg_make_error_string(ret));
         return false;
+    }
 
     octx->flags |=
         AVFMT_FLAG_GENPTS | AVFMT_FLAG_SORT_DTS | AVFMT_FLAG_FLUSH_PACKETS;
@@ -178,8 +187,15 @@ viewer_data::try_setup_output() {
     av_dict_set(&octx->metadata, "Source", sd->iargs.name.c_str(), 0);
 
     ret = avformat_write_header(octx, nullptr);
-    if (ret < 0)
+    if (ret < 0) {
+        logWarn(
+            "failed to write header: src: %s container: %s err:%d, %s",
+            sd->iargs.name,
+            to_string(sd->container),
+            ret,
+            ffmpeg_make_error_string(ret));
         return false;
+    }
 
     return true;
 }

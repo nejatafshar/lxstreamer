@@ -67,6 +67,9 @@ struct scaler::impl {
             nullptr,
             nullptr);
         if (!context) {
+            logError(
+                "scaler: failed not allocate scale context: src: %s",
+                super.iargs.name);
             return AVERROR_INVALIDDATA;
         }
 
@@ -107,6 +110,11 @@ scaler::perform_scale(
     r->format = config.dest_pixel_fmt;
     auto ret  = av_frame_get_buffer(r, 0);
     if (ret < 0) {
+        logError(
+            "scaler: failed to allocate frame for scaling: src: %s err:%d, %s",
+            pimpl->super.iargs.name,
+            ret,
+            ffmpeg_make_error_string(ret));
         return AVERROR_INVALIDDATA;
     }
 
@@ -124,6 +132,11 @@ scaler::perform_scale(
         r->linesize);
 
     if (ret == 0) {
+        logError(
+            "scaler: failed to scale: src: %s err:%d, %s",
+            pimpl->super.iargs.name,
+            ret,
+            ffmpeg_make_error_string(ret));
         return AVERROR_INVALIDDATA;
     }
 

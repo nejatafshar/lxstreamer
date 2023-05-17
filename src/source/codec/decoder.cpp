@@ -50,17 +50,27 @@ decoder::initialize(const AVStream* stream) {
         return 0;
     auto dec = avcodec_find_decoder(stream->codecpar->codec_id);
     if (!dec) {
-        // Failed to find decoder
+        logError(
+            "failed to find decoder: src: %s codec_id: %d",
+            pimpl->super.iargs.name,
+            static_cast<int>(stream->codecpar->codec_id));
         return AVERROR_DECODER_NOT_FOUND;
     }
     auto* codec_ctx = avcodec_alloc_context3(dec);
     if (!codec_ctx) {
-        // Failed to allocate the decoder context
+        logError(
+            "failed to allocate context: src: %s codec: %s",
+            pimpl->super.iargs.name,
+            dec->long_name);
         return AVERROR(ENOMEM);
     }
     auto ret = avcodec_parameters_to_context(codec_ctx, stream->codecpar);
     if (ret < 0) {
-        // Failed to copy decoder parameters to input decoder context
+        logError(
+            "failed to copy decoder parameters to input decoder context: src: "
+            "%s codec: %s",
+            pimpl->super.iargs.name,
+            dec->long_name);
         return ret;
     }
     if (codec_ctx->codec_type == AVMEDIA_TYPE_VIDEO ||
@@ -73,7 +83,10 @@ decoder::initialize(const AVStream* stream) {
         /* Open decoder */
         ret = avcodec_open2(codec_ctx, dec, nullptr);
         if (ret < 0) {
-            // Failed to open decoder
+            logError(
+                "failed to open decoder: src: %s codec: %s",
+                pimpl->super.iargs.name,
+                dec->long_name);
             return ret;
         }
     }
@@ -100,7 +113,11 @@ decoder::decode_frames(const AVPacket* pkt, std::list<frame_ref>& frames) {
     }
     auto ret = avcodec_send_packet(dec.get(), pkt);
     if (ret < 0) {
-        // Decoding failed
+        logError(
+            "decoding failed: src: %s err: %d, %s",
+            pimpl->super.iargs.name,
+            ret,
+            ffmpeg_make_error_string(ret));
         return ret;
     }
 

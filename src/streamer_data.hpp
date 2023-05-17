@@ -46,11 +46,18 @@ struct streamer_data {
         uri_data.source_name = query_value(uri_data.query, "source");
         uri_data.session     = query_value(uri_data.query, "session");
         if (auto src = get_source(uri_data.source_name); src) {
-            if (uri_data.session != src->args().auth_session)
+            if (uri_data.session != src->args().auth_session) {
+                logInfo(
+                    "authentication failed for src: %s", uri_data.source_name);
                 return make_err(error_t::authentication_failed);
+            }
             auto v = std::make_unique<viewer>(uri_data, mc);
-            if (auto ec = v->init(); ec)
+            if (auto ec = v->init(); ec) {
+                logInfo(
+                    "failed to initialize viewer for src: %s",
+                    uri_data.source_name);
                 return ec;
+            }
             src->add_viewer(std::move(v));
             return std::error_code{};
         }

@@ -106,7 +106,10 @@ writer_base::make_output_streams() {
         out_stream_map[i] = out_stream_counter++;
         auto* stream      = avformat_new_stream(output.get(), nullptr);
         if (!stream) {
-            // failed to create stream
+            logFatal(
+                "failed to create output stream: src: %s  stream: %d",
+                sd->iargs.name,
+                i);
             return false;
         }
 
@@ -119,6 +122,11 @@ writer_base::make_output_streams() {
             // remuxed (no re-encoding)
             int nret = avcodec_parameters_copy(stream->codecpar, in_codecpar);
             if (nret < 0) {
+                logFatal(
+                    "failed to copy input codec parameters to output stream: "
+                    "src: %s stream: %d",
+                    sd->iargs.name,
+                    i);
                 return false;
             }
             stream->codecpar->codec_tag = 0;
@@ -131,7 +139,11 @@ writer_base::make_output_streams() {
             int ret =
                 avcodec_parameters_from_context(stream->codecpar, context);
             if (ret < 0) {
-                // Failed to copy encoder parameters to output
+                logFatal(
+                    "failed to copy encoder codec parameters to output stream: "
+                    "src: %s stream: %d",
+                    sd->iargs.name,
+                    i);
                 return false;
             }
 

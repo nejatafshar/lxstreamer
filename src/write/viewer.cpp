@@ -39,7 +39,13 @@ public:
         if (worker.joinable()) {
             try {
                 worker.join();
-            } catch (std::system_error&) {
+            } catch (std::system_error& e) {
+                logWarn(
+                    "viewer failed to join: src: %s addr: %s err: %d, %s",
+                    sd->iargs.name,
+                    address,
+                    e.code().value(),
+                    e.what());
             }
         }
     }
