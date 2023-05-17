@@ -18,6 +18,7 @@ namespace lxstreamer {
 struct interrupt_handler {
 
     void set_context(AVFormatContext* ctx) {
+        running                              = true;
         context                              = ctx;
         context->interrupt_callback.callback = &interrupt_handler::callback;
         context->interrupt_callback.opaque   = this;
@@ -35,14 +36,17 @@ struct interrupt_handler {
     static int callback(void* opaque) noexcept {
         auto* self = reinterpret_cast<interrupt_handler*>(opaque);
         if (!self)
-            return 0;
+            return 1;
         ++(self->interrupt_count);
+        if (!self->running.load(std::memory_order_relaxed))
+            return 1;
         if (self->interrupt_count % 10 == 0)
             if (self->elapsed.elapsed() > self->timeout)
                 return 1;
         return 0;
     }
 
+    std::atomic_bool     running = true;
     AVFormatContext*     context = nullptr;
     elapsed_timer        elapsed;
     std::chrono::seconds timeout{5};

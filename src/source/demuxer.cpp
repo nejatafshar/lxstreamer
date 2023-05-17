@@ -104,6 +104,7 @@ demuxer::run() {
             break; // stop demuxing
         }
     }
+    d.super.demux_data.inter_handler.running = false;
     logInfo(
         "finished demuxing: src: %s err: %d, %s",
         d.super.iargs.name,

@@ -27,6 +27,7 @@ struct source::impl : public source_data {
         : source_data(s, args) {}
     ~impl() {
         running.store(false);
+        demux_data.inter_handler.running = false;
         if (worker.joinable()) {
             try {
                 worker.join();
