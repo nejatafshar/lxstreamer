@@ -81,14 +81,29 @@ to_lower(std::string str) {
     return data;
 }
 
+template <typename T>
+inline auto
+convert_arg(const T& arg) {
+    return arg;
+}
+template <>
+inline auto
+convert_arg(const std::string& arg) {
+    return arg.c_str();
+}
+
 template <typename... Args>
 inline std::string
 format_string(const std::string& format, Args&&... args) {
     using namespace std;
-    auto size =
-        snprintf(nullptr, 0, format.c_str(), std::forward<Args>(args)...);
+    auto size = snprintf(
+        nullptr, 0, format.c_str(), convert_arg(std::forward<Args>(args))...);
     string output(size, '\0');
-    snprintf(&output[0], size, format.c_str(), std::forward<Args>(args)...);
+    snprintf(
+        &output[0],
+        size,
+        format.c_str(),
+        convert_arg(std::forward<Args>(args))...);
     return output;
 }
 
@@ -138,13 +153,14 @@ log(const std::string& str, Args&&... args) {
     std::scoped_lock lock{log_mutex};
     if (level < log_level)
         return;
+    const auto& logstr = format_string(str, std::forward<Args>(args)...);
     if (log_to_stdout) {
         auto out = level >= log_level_t::error ? stderr : stdout;
-        fprintf(out, str.c_str(), std::forward<Args>(args)...);
+        fprintf(out, logstr.c_str());
         fprintf(out, "\n");
     }
     if (log_cb)
-        log_cb(format_string(str, std::forward<Args>(args)...));
+        log_cb(logstr);
 }
 
 template <typename... Args>
