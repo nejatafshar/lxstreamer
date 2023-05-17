@@ -27,17 +27,25 @@ close_socket(sock_t& s) {
 }
 
 int
+write_sock_or_ssl(viewer_data& d, const char* data, size_t size) {
+    if (d.sd->super.https)
+        return write(d.ssl_ctx->ssl, data, size);
+    else
+        return write(d.write_sock, data, size);
+}
+
+int
 send_data(viewer_data& d, const char* data, size_t size) {
-    if (!d.ssl_ctx || !d.ssl_ctx->ssl)
+    if (d.sd->super.https && (!d.ssl_ctx || !d.ssl_ctx->ssl))
         return ensure_negative(EPIPE);
     if (!d.header_sent.load(std::memory_order_relaxed)) {
-        if (auto ret = write(
-                d.ssl_ctx->ssl, ResponseHeader, std::strlen(ResponseHeader));
+        if (auto ret = write_sock_or_ssl(
+                d, ResponseHeader, std::strlen(ResponseHeader));
             ret <= 0)
             return ret;
         d.header_sent = true;
     }
-    return write(d.ssl_ctx->ssl, data, size);
+    return write_sock_or_ssl(d, data, size);
 }
 
 int
@@ -104,9 +112,11 @@ viewer_data::init_io() {
     io.reset(ptr);
 
     write_sock = connection->sock;
-    ssl_ctx    = reinterpret_cast<mg_ssl_if_ctx*>(connection->ssl_if_data);
-    connection->sock        = InvalidSocket;
-    connection->ssl_if_data = nullptr;
+    if (sd->super.https)
+        ssl_ctx = reinterpret_cast<mg_ssl_if_ctx*>(connection->ssl_if_data);
+    connection->sock = InvalidSocket;
+    if (sd->super.https)
+        connection->ssl_if_data = nullptr;
     connection->flags |= MG_F_CLOSE_IMMEDIATELY;
 
     set_blocking(write_sock);
@@ -121,10 +131,8 @@ void
 viewer_data::reset_io() {
     if (io.get())
         io->opaque = nullptr;
-    if (ssl_ctx && ssl_ctx->ssl) {
-        auto ret = SSL_shutdown(ssl_ctx->ssl);
-//        if (ret == 0)
-//            SSL_shutdown(ssl_ctx->ssl);
+    if (sd->super.https && ssl_ctx && ssl_ctx->ssl) {
+        SSL_shutdown(ssl_ctx->ssl);
         close_socket(write_sock);
         if (ssl_ctx->ssl)
             SSL_free(ssl_ctx->ssl);
