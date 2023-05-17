@@ -21,7 +21,7 @@ void
 close_socket(sock_t& s) {
     if (s == InvalidSocket)
         return;
-    while (close(s) != 0)
+    while (!close(s))
         ;
     s = InvalidSocket;
 }
@@ -123,8 +123,8 @@ viewer_data::reset_io() {
         io->opaque = nullptr;
     if (ssl_ctx && ssl_ctx->ssl) {
         auto ret = SSL_shutdown(ssl_ctx->ssl);
-        if (ret == 0)
-            SSL_shutdown(ssl_ctx->ssl);
+//        if (ret == 0)
+//            SSL_shutdown(ssl_ctx->ssl);
         close_socket(write_sock);
         if (ssl_ctx->ssl)
             SSL_free(ssl_ctx->ssl);
