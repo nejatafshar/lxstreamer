@@ -55,7 +55,6 @@ source::impl::start_worker() {
         running.store(true);
         worker = std::thread{[this]() {
             while (running.load()) {
-                std::this_thread::sleep_for(std::chrono::milliseconds{2000});
                 if (demuxing || recording) {
                     try {
                         run();
@@ -72,6 +71,9 @@ source::impl::start_worker() {
                             e.what());
                     }
                 }
+                if (running.load())
+                    std::this_thread::sleep_for(
+                        std::chrono::milliseconds{2000});
             }
         }};
     }
