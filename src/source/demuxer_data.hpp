@@ -9,7 +9,6 @@
 #ifndef DEMUXER_DATA_HPP
 #define DEMUXER_DATA_HPP
 
-#include "ffmpeg_types.hpp"
 #include "interrupt_handler.hpp"
 #include "utils.hpp"
 
@@ -26,6 +25,19 @@ struct stream_data {
     int64_t   first_dts     = 0;
     int64_t   dts_offset    = 0;
     double    last_speed    = 1;
+
+    void reset() {
+        stream        = nullptr;
+        stream_idx    = -1;
+        frames        = 0;
+        duration      = 0;
+        last_pts      = 0;
+        last_dts      = 0;
+        last_pts_diff = 0;
+        first_dts     = 0;
+        dts_offset    = 0;
+        last_speed    = 1;
+    }
 };
 
 struct demuxer_data {
@@ -61,6 +73,12 @@ struct demuxer_data {
             return false; // not interested in this packet
 
         return true;
+    }
+
+    void reset() {
+        is_local = false;
+        video_stream.reset();
+        audio_stream.reset();
     }
 
     interrupt_handler inter_handler;

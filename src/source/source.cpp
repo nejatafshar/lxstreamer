@@ -86,8 +86,8 @@ source::impl::run() {
     idemuxer->run();
 
     viewers.clear();
-
     idemuxer.reset();
+    demux_data.reset();
 }
 
 void
