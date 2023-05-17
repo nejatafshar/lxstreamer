@@ -22,6 +22,7 @@ struct source::impl : public source_data {
     std::unique_ptr<demuxer> idemuxer;
     elapsed_timer            run_elapsed_time;
     elapsed_timer            viewless_time;
+    std::mutex               mutex;
 
     impl(const streamer_data& s, const source_args_t& args)
         : source_data(s, args) {}
@@ -52,6 +53,7 @@ struct source::impl : public source_data {
 std::error_code
 source::impl::start_worker() {
     if (!running.load() && !worker.joinable()) {
+        demuxing.store(false);
         running.store(true);
         worker = std::thread{[this]() {
             while (running.load()) {
@@ -88,7 +90,10 @@ source::impl::run() {
 
     idemuxer->run();
 
-    viewers.clear();
+    {
+        std::scoped_lock lock{mutex};
+        viewers.clear();
+    }
     idemuxer.reset();
     demux_data.reset();
 }
@@ -116,6 +121,7 @@ source::impl::on_open() {
     } else
         view_encoding.audio.codec = codec_t::unknown;
 
+    std::scoped_lock lock{mutex};
     for (const auto& v : viewers)
         v->start();
 }
@@ -124,6 +130,7 @@ void
 source::impl::on_packet(const AVPacket* pkt) {
     transcoder tc{*this, pkt};
 
+    std::scoped_lock lock{mutex};
     for (auto iter = viewers.begin(); iter != viewers.end();) {
         const auto& packets = tc.make_packets(
             pkt->stream_index == demux_data.video_stream.stream_idx
@@ -216,6 +223,9 @@ std::error_code
 source::add_viewer(std::unique_ptr<viewer> v) {
     if (auto ec = v->init(pimpl.get()); ec)
         return ec;
+    std::scoped_lock lock{pimpl->mutex};
+    if (pimpl->demuxing)
+        v->start();
     pimpl->viewers.emplace_back(std::move(v));
     pimpl->demuxing = true;
     return std::error_code{};
