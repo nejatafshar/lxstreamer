@@ -135,6 +135,7 @@ http_server::impl::setup() {
                 "http server: failed to listen on: %s err: %s", address, err);
             return false;
         }
+        mg_set_protocol_http_websocket(listener);
         listener->user_data = this;
     } else {
         listener = mg_bind(mgr.get(), address.data(), http_callback);
@@ -142,6 +143,7 @@ http_server::impl::setup() {
             logFatal("http server: failed to listen on: %s", address);
             return false;
         }
+        mg_set_protocol_http_websocket(listener);
         listener->user_data = this;
     }
 
