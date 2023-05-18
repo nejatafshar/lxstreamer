@@ -79,12 +79,14 @@ struct demuxer_data {
         is_local = false;
         video_stream.reset();
         audio_stream.reset();
+        demuxer_initialized = false;
     }
 
     interrupt_handler inter_handler;
     bool              is_local = false;
     stream_data       video_stream;
     stream_data       audio_stream;
+    std::atomic_bool  demuxer_initialized = false;
 
     struct local_file_data {
         std::atomic<int64_t>      seek_time{-1};

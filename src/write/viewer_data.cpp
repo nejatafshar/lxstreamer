@@ -213,6 +213,8 @@ bool
 viewer_data::setup_output() {
     if (!sd)
         return false;
+    if (!sd->demux_data.demuxer_initialized)
+        return false;
 
     std::list<container_t> formats{
         container_t::matroska, container_t::mpegts, container_t::flv};

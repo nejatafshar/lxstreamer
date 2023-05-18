@@ -53,7 +53,6 @@ struct source::impl : public source_data {
 std::error_code
 source::impl::start_worker() {
     if (!running.load() && !worker.joinable()) {
-        demuxing.store(false);
         running.store(true);
         worker = std::thread{[this]() {
             while (running.load()) {
@@ -90,11 +89,12 @@ source::impl::run() {
 
     idemuxer->run();
 
-    irecorder.reset();
     {
         std::scoped_lock lock{mutex};
         viewers.clear();
     }
+    if (irecorder)
+        irecorder.reset();
     idemuxer.reset();
     demux_data.reset();
 }
@@ -267,7 +267,7 @@ source::add_viewer(std::unique_ptr<viewer> v) {
     if (auto ec = v->init(pimpl.get()); ec)
         return ec;
     std::scoped_lock lock{pimpl->mutex};
-    if (pimpl->demuxing)
+    if (pimpl->demuxing && pimpl->demux_data.demuxer_initialized)
         v->start();
     pimpl->viewers.emplace_back(std::move(v));
     pimpl->demuxing = true;

@@ -92,7 +92,7 @@ writer_base::make_output_streams() {
     last_dtses.fill(-1);
 
     size_t stream_count = 0;
-    if (sd)
+    if (sd && sd->input_ctx)
         stream_count = sd->input_ctx->nb_streams;
     else
         stream_count = 1; // no input
@@ -100,7 +100,7 @@ writer_base::make_output_streams() {
     int out_stream_counter{0};
     for (size_t i = 0; i < stream_count && i < max_streams; ++i) {
         const auto* in_codecpar =
-            sd ? sd->input_ctx->streams[i]->codecpar : nullptr;
+            sd->input_ctx ? sd->input_ctx->streams[i]->codecpar : nullptr;
         if (in_codecpar && in_codecpar->codec_type != AVMEDIA_TYPE_VIDEO &&
             in_codecpar->codec_type != AVMEDIA_TYPE_AUDIO)
             continue;

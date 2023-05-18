@@ -39,6 +39,7 @@ struct demuxer::impl {
             return ret;
         }
 
+        super.demux_data.demuxer_initialized = true;
         super.on_open();
 
         return 0;
