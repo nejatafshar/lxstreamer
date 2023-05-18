@@ -66,6 +66,7 @@ struct http_server::impl {
     }
 
     bool setup();
+    void prepare_ssl_cert_pathes();
 
     static void http_callback(mg_connection* mc, int ev, void* opaque) {
         if (ev == MG_EV_HTTP_REQUEST) {
@@ -105,15 +106,7 @@ http_server::impl::setup() {
     const auto& address = format_string("tcp://0.0.0.0:%d", super.port);
 
     if (super.https) {
-        namespace fs = std::filesystem;
-        if (super.ssl_cert_path.empty())
-            super.ssl_cert_path =
-                (fs::path{current_app_path()}.parent_path() / "server.pem")
-                    .string();
-        if (super.ssl_key_path.empty())
-            super.ssl_key_path =
-                (fs::path{current_app_path()}.parent_path() / "server.key")
-                    .string();
+        prepare_ssl_cert_pathes();
 
         struct mg_bind_opts bind_opts;
         memset(&bind_opts, 0, sizeof(bind_opts));
@@ -150,6 +143,27 @@ http_server::impl::setup() {
     logInfo("http server listening on port: %d", super.port);
 
     return true;
+}
+
+void
+http_server::impl::prepare_ssl_cert_pathes() {
+    if (super.ssl_cert_path.empty())
+        super.ssl_cert_path = "server.pem";
+    if (super.ssl_key_path.empty())
+        super.ssl_key_path = "server.key";
+    namespace fs              = std::filesystem;
+    const auto&     app_dir   = fs::path{current_app_path()}.parent_path();
+    const auto&     cert_path = fs::path{super.ssl_cert_path};
+    const auto&     key_path  = fs::path{super.ssl_key_path};
+    std::error_code ec;
+    if (fs::is_regular_file(cert_path, ec) && !fs::exists(cert_path, ec)) {
+        super.ssl_cert_path = cert_path.filename().string();
+        super.ssl_cert_path = (app_dir / super.ssl_cert_path).string();
+    }
+    if (fs::is_regular_file(key_path, ec) && !fs::exists(key_path, ec)) {
+        super.ssl_key_path = key_path.filename().string();
+        super.ssl_key_path = (app_dir / super.ssl_key_path).string();
+    }
 }
 
 void
