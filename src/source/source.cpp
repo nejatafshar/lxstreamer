@@ -90,6 +90,7 @@ source::impl::run() {
 
     idemuxer->run();
 
+    //    irecorder.reset();
     {
         std::scoped_lock lock{mutex};
         viewers.clear();
@@ -106,8 +107,6 @@ source::impl::on_open() {
         auto max_bandwidth = iargs.video_encoding_view.max_bandwidth;
         if (codec == codec_t::unknown)
             codec = codec_t::h264;
-        if (height <= 0)
-            height = 720;
         if (max_bandwidth <= 0)
             max_bandwidth = 2000;
         view_encoding.video.codec         = codec;
@@ -137,6 +136,17 @@ source::impl::on_open() {
 void
 source::impl::on_packet(const AVPacket* pkt) {
     transcoder tc{*this, pkt};
+    //    if (irecorder.is_recording()) {
+    //        if (!(pkt && irt_data.audio_stat.belongs(pkt) &&
+    //              !super.scfg.goptions.records.record_audio))
+    //            for (const auto& p : tc.make_packets(
+    //                     irt_data.video_stat.belongs(pkt) ?
+    //                     record_encoding.video
+    //                                                      :
+    //                                                      record_encoding.audio))
+    //                irecorder.write_async(
+    //                    p.get(), irt_data.vkey_frames.last_packet());
+    //    }
 
     std::scoped_lock lock{mutex};
     for (auto iter = viewers.begin(); iter != viewers.end();) {
@@ -158,6 +168,11 @@ source::impl::on_packet(const AVPacket* pkt) {
     }
 
     if (run_elapsed_time.seconds() > 5) {
+        //            if (recording && !irecorder.is_recording())
+        //                start_recording();
+        //            if (!recording && irecorder)
+        //                irecorder.reset();
+
         if (viewers.empty()) {
             if (viewless_time.seconds() > 30 && !recording) {
                 demuxing = false;
@@ -175,7 +190,31 @@ source::impl::on_packet(const AVPacket* pkt) {
 }
 
 void
-source::impl::start_recording() {}
+source::impl::start_recording() {
+    //    auto& op = super.scfg.goptions;
+
+    //    if (op.records.encoder_enabled || is_webcam) {
+    //        record_encoding.video.codec         = op.records.codec;
+    //        record_encoding.video.height        = op.records.height;
+    //        record_encoding.video.max_bandwidth = op.records.max_bandwidth;
+    //        record_encoding.video.init_resolution(
+    //            irt_data.video_stat.stream()->codecpar->width,
+    //            irt_data.video_stat.stream()->codecpar->height);
+    //    } else
+    //        record_encoding.video.codec = vss::codec_t::unknown;
+
+    //    vss::view::source_query_t sq;
+    //    sq.src_id   = super.info.uid;
+    //    sq.src_name = super.info.name;
+    //    auto fsd =
+    //        std::make_unique<av::filesink_data>(ictx_input.get(),
+    //        std::move(sq));
+    //    fsd->encoder_agent = &iencoder;
+    //    fsd->enc_conf      = &record_encoding;
+    //    irecorder.make(
+    //        super, std::move(fsd), vss::user_id_t{super.record_by.load()});
+    //    irecorder.start_async();
+}
 
 source::source(const streamer_data& s, const source_args_t& args)
     : pimpl{std::make_unique<impl>(s, args)} {}
