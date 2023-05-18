@@ -30,6 +30,8 @@ rescale_remux(AVPacket* pkt, const AVRational& in, const AVRational& out) {
 
 int
 writer_base::write_packet(const AVPacket* p) {
+    if (p->stream_index > max_streams)
+        return 0;
     if (last_write_time.seconds() > 15)
         return AVERROR(ETIMEDOUT);
 

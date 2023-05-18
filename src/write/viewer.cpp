@@ -56,10 +56,12 @@ public:
                     cv.wait(lock, [&] {
                         return !running.load() || !queue.empty();
                     });
-                    if (!queue.empty()) {
+                    while (!queue.empty()) {
                         const auto pkt = queue.front().get();
-                        if (write_packet(pkt) < 0)
+                        if (write_packet(pkt) < 0) {
                             running = false;
+                            break;
+                        }
                         queue.pop();
                     }
                 }

@@ -106,7 +106,8 @@ viewer_data::init_io() {
     auto ptr      = avio_alloc_context(
         buf, buf_size, 1, this, nullptr, write_callback, nullptr);
     if (ptr == nullptr) {
-        logFatal("failed to alloc avio context: src: %s", sd->iargs.name);
+        logFatal(
+            "viewer: failed to alloc avio context: src: %s", sd->iargs.name);
         return make_err(error_t::bad_state);
     }
     io.reset(ptr);
@@ -153,7 +154,7 @@ viewer_data::try_setup_output() {
         &octx, nullptr, to_string(sd->container).c_str(), nullptr);
     if (ret < 0 || !octx) {
         logFatal(
-            "failed to alloc output context: src: %s err:%d, %s",
+            "viewer: failed to alloc output context: src: %s err:%d, %s",
             sd->iargs.name,
             ret,
             ffmpeg_make_error_string(ret));
@@ -169,8 +170,8 @@ viewer_data::try_setup_output() {
 
     octx->pb = io.get();
 
-    auto& conf                    = sd->view_encoding;
-    sd->view_encoding.audio.codec = codec_t::unknown;
+    auto& conf       = sd->view_encoding;
+    conf.audio.codec = codec_t::unknown;
     if (sd->container != container_t::matroska)
         if (auto codec = alternate_proper_audio_codec();
             codec != codec_t::unknown)
@@ -197,7 +198,7 @@ viewer_data::try_setup_output() {
     ret = avformat_write_header(octx, nullptr);
     if (ret < 0) {
         logWarn(
-            "failed to write header: src: %s container: %s err:%d, %s",
+            "viewer: failed to write header: src: %s container: %s err:%d, %s",
             sd->iargs.name,
             to_string(sd->container),
             ret,
