@@ -32,7 +32,11 @@ int
 writer_base::write_packet(const AVPacket* p) {
     if (p->stream_index > max_streams)
         return 0;
-    if (last_write_time.seconds() > 15)
+    if (last_write_time.seconds() >
+        static_cast<int>(
+            15 + (type == writer_type::record
+                      ? sd->record_options.write_interval
+                      : 0)))
         return AVERROR(ETIMEDOUT);
 
     auto in_idx  = p->stream_index;
@@ -87,12 +91,14 @@ writer_base::write_packet(const AVPacket* p) {
 
 bool
 writer_base::make_output_streams() {
+    if (!sd)
+        return false;
     out_stream_map.fill(-1);
     first_ptses.fill(-1);
     last_dtses.fill(-1);
 
     size_t stream_count = 0;
-    if (sd && sd->input_ctx)
+    if (sd->input_ctx)
         stream_count = sd->input_ctx->nb_streams;
     else
         stream_count = 1; // no input

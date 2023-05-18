@@ -83,7 +83,7 @@ recorder::impl::run() {
                 if (passed >= sd->record_options.write_interval)
                     write_buffer();
             } else {
-                if (!write_packet(pkt)) {
+                if (write_packet(pkt) < 0) {
                     running = false;
                     break;
                 } else if (passed >= 5)
@@ -103,10 +103,11 @@ void
 recorder::impl::write_buffer() {
     while (!rec_buffer.empty()) {
         const auto pkt = rec_buffer.front().get();
-        if (!write_packet(pkt)) {
+        if (write_packet(pkt) < 0) {
             running = false;
             break;
         }
+        rec_buffer.pop();
     }
     buffer_write_time.start();
 }

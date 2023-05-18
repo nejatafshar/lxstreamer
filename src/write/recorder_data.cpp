@@ -71,8 +71,10 @@ recorder_data::init_record() {
 
 bool
 recorder_data::check_space_limit() {
-    int64_t     space = -1;
-    const auto& path  = sd->record_options.path;
+    const auto& path = sd->record_options.path;
+    if (path.empty())
+        return true;
+    int64_t space = -1;
     try {
         space = fs::space(path).available;
     } catch (const std::exception&) {
