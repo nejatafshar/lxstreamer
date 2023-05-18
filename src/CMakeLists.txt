@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.14)
 
 project(lxstreamer LANGUAGES C CXX)
 
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -43,7 +46,7 @@ add_library(mongoose_lib OBJECT server/mongoose.c)
 if(MSVC)
     target_compile_options(mongoose_lib PRIVATE /W0)
 endif()
-target_compile_definitions(mongoose_lib PUBLIC
+target_compile_definitions(mongoose_lib PRIVATE
     MG_ENABLE_MQTT=0
     MG_ENABLE_HTTP_WEBSOCKET=0
     MG_ENABLE_BROADCAST
