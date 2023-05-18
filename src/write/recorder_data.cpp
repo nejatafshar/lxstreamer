@@ -103,7 +103,9 @@ recorder_data::setup_path() {
     } else {
         auto dir = rp;
         if (!fs::is_directory(rp))
-            dir = fs::path{current_app_path()}.parent_path().string();
+            dir = (fs::path{current_app_path()}.parent_path() /
+                   std::string{"records"} / sd->iargs.name)
+                      .string();
         file_name = format_string(
             "%s-%s.%s",
             sd->iargs.name,
@@ -248,8 +250,8 @@ recorder_data::setup_output() {
 
 void
 recorder_data::finalize() {
-    if (output)
-        av_write_trailer(output.get());
+    //    if (output)
+    //        av_write_trailer(output.get());
 }
 
 } // namespace lxstreamer
