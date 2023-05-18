@@ -7,10 +7,11 @@ project(lxstreamer
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/examples")
 
 set(DIR_3RDPARTIES "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty" CACHE PATH "path to 3rdparty libs")
 option(HTTPS "compile with https support" ON)
+option(BUILD_EXAMPLES "build examples" ON)
 
 list(PREPEND CMAKE_INCLUDE_PATH "${DIR_3RDPARTIES}/ffmpeg/include")
 list(PREPEND CMAKE_LIBRARY_PATH "${DIR_3RDPARTIES}/ffmpeg/lib"    )
@@ -34,3 +35,7 @@ if(HTTPS)
 endif()
 
 add_subdirectory(src)
+
+if(BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
