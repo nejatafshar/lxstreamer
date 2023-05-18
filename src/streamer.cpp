@@ -8,6 +8,7 @@
 
 #include "streamer.hpp"
 #include "error_types.hpp"
+#include "ffmpeg_types.hpp"
 #include "server/http_server.hpp"
 #include "streamer_data.hpp"
 
@@ -16,7 +17,9 @@ namespace lxstreamer {
 struct streamer::impl : public streamer_data {
     http_server server{*this};
 
-    explicit impl(int port, bool https) : streamer_data{port, https} {}
+    explicit impl(int port, bool https) : streamer_data{port, https} {
+        avdevice_register_all();
+    }
 
     ~impl() {
         running = false;

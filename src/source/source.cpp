@@ -101,10 +101,18 @@ source::impl::run() {
 void
 source::impl::on_open() {
     if (is_video(iargs.video_encoding_view) || is_webcam) {
-        view_encoding.video.codec  = iargs.video_encoding_view.codec;
-        view_encoding.video.height = iargs.video_encoding_view.height;
-        view_encoding.video.max_bandwidth =
-            iargs.video_encoding_view.max_bandwidth;
+        auto codec         = iargs.video_encoding_view.codec;
+        auto height        = iargs.video_encoding_view.height;
+        auto max_bandwidth = iargs.video_encoding_view.max_bandwidth;
+        if (codec == codec_t::unknown)
+            codec = codec_t::h264;
+        if (height <= 0)
+            height = 720;
+        if (max_bandwidth <= 0)
+            max_bandwidth = 2000;
+        view_encoding.video.codec         = codec;
+        view_encoding.video.height        = height;
+        view_encoding.video.max_bandwidth = max_bandwidth;
         init_resolution(
             view_encoding.video,
             demux_data.video_stream.stream->codecpar->width,

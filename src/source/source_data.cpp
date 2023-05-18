@@ -13,6 +13,17 @@
 
 namespace lxstreamer {
 
+std::string
+preferred_video_framework() {
+#if defined(__linux__)
+    return "video4linux2";
+#elif defined(__APPLE__) || defined(__FreeBSD__)
+    return "avfoundation";
+#elif defined(_WIN32)
+    return "dshow";
+#endif
+}
+
 int
 source_data::load_input() {
     auto* ctx = avformat_alloc_context();
@@ -37,6 +48,8 @@ source_data::load_input() {
             if (index == 2)
                 break;
         }
+        if (video_framework.empty())
+            video_framework = preferred_video_framework();
         device_name = str;
         if (!video_framework.empty()) {
             input_format = av_find_input_format(video_framework.data());
