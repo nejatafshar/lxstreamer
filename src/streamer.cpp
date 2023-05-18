@@ -75,11 +75,11 @@ streamer::sources() const {
 }
 
 std::error_code
-streamer::start_recording(std::string name, std::string path) {
+streamer::start_recording(std::string name, const record_options_t& options) {
     auto src = pimpl->get_source(name);
     if (!src)
         return make_err(error_t::not_found);
-    return src->start_recording(path);
+    return src->start_recording(options);
 }
 
 std::error_code

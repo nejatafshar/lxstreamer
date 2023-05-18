@@ -33,7 +33,7 @@ public:
     /// sets pathes for SSL certificate and key files
     void set_ssl_cert_path(std::string cert, std::string key);
 
-    /// adds a source with a args to be streamed
+    /// adds a source with <args> to be streamed
     std::error_code add_source(const source_args_t& args);
 
     /// removes source <name>
@@ -42,8 +42,9 @@ public:
     /// returns source names
     std::list<std::string> sources() const;
 
-    /// starts recording source <name> to path
-    std::error_code start_recording(std::string name, std::string path);
+    /// starts recording source <name> with <options>
+    std::error_code
+    start_recording(std::string name, const record_options_t& options);
 
     /// stops recording source <name>
     std::error_code stop_recording(std::string name);

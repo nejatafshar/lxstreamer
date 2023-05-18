@@ -30,8 +30,8 @@ struct source final {
     /// returns if it's recording
     bool is_recording() const;
 
-    /// starts recording to path
-    std::error_code start_recording(std::string path);
+    /// starts recording with options
+    std::error_code start_recording(const record_options_t& options);
     /// stops recording
     std::error_code stop_recording();
 

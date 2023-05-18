@@ -16,6 +16,7 @@
 #include "demuxer_data.hpp"
 #include "ffmpeg_types.hpp"
 #include "streamer_data.hpp"
+#include "write/recorder.hpp"
 #include "write/viewer.hpp"
 
 #include <chrono>
@@ -32,8 +33,9 @@ struct source_data {
     std::atomic_bool     running{false}; // is false on class destruction
     std::atomic_bool     demuxing{false};
     std::atomic_bool     recording{false};
-    std::string          record_path;
+    record_options_t     record_options;
     std::list<std::unique_ptr<viewer>> viewers;
+    std::unique_ptr<recorder>          irecorder;
     container_t                        container{container_t::unknown};
     std::chrono::milliseconds          wait_interval{10000};
     unique_ptr<AVFormatContext>        input_ctx;

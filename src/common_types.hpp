@@ -43,6 +43,17 @@ enum class codec_t {
     unknown = -1,
 };
 
+enum class file_format_t {
+    mp4     = 1,
+    ts      = 2,
+    mkv     = 3,
+    avi     = 4,
+    flv     = 5,
+    mov     = 6,
+    webm    = 7,
+    unknown = -1,
+};
+
 struct encoding_t {
     codec_t codec{codec_t::unknown};
     // video only
@@ -80,17 +91,29 @@ is_audio(encoding_t enc) {
 
 // arguments for source to be added
 struct source_args_t {
-    std::string name;         ///< a unique name for source
-    std::string url;          ///< source url
-    std::string auth_session; ///< a string to be provided in uri query by
-                              ///< <session> field for stream authentication
-    encoding_t  video_encoding_view; ///< optional video encoding for streaming
-    encoding_t  audio_encoding_view; ///< optional audio encoding for streaming
-    encoding_t  video_encoding_rec;  ///< optional video encoding for recording
-    encoding_t  audio_encoding_rec;  ///< optional audio encoding for recording
+    std::string name;           ///< a unique name for source
+    std::string url;            ///< source url
+    std::string auth_session;   ///< a string to be provided in uri query by
+                                ///< <session> field for stream authentication
+    encoding_t  video_encoding; ///< optional video encoding for streaming
+    encoding_t  audio_encoding; ///< optional audio encoding for streaming
     container_t container{
         container_t::unknown}; ///< preferred container format, automatically
                                ///< chosen if not defined
+};
+
+// options for source recording
+struct record_options_t {
+    std::string   path; ///< record output dir path or file path
+    file_format_t format{
+        file_format_t::unknown};    ///< preferred file format, automatically
+                                    ///< chosen if not defined
+    encoding_t video_encoding;      ///< optional video encoding for recording
+    encoding_t audio_encoding;      ///< optional audio encoding for recording
+    size_t     file_size{1024};     ///< chunk file size in mega bytes
+    size_t     file_duration{0};    ///< chunk file duration in sec
+    size_t     write_interval{300}; ///< interval for writing to file
+    bool       record_audio{true};  ///< if audio should be recorded
 };
 
 } // namespace lxstreamer

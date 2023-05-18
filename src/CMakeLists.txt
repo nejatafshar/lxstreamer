@@ -22,6 +22,8 @@ add_library(${PROJECT_NAME} STATIC
   write/writer_base.cpp
   write/viewer.cpp
   write/viewer_data.cpp
+  write/recorder.cpp
+  write/recorder_data.cpp
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE LXSTREAMER_LIBRARY)
