@@ -49,7 +49,7 @@ struct interrupt_handler {
     std::atomic_bool     running = true;
     AVFormatContext*     context = nullptr;
     elapsed_timer        elapsed;
-    std::chrono::seconds timeout{5};
+    std::chrono::seconds timeout{20};
     int64_t              interrupt_count = 0;
 };
 
