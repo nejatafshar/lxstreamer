@@ -250,8 +250,8 @@ recorder_data::setup_output() {
 
 void
 recorder_data::finalize() {
-    //    if (output)
-    //        av_write_trailer(output.get());
+    if (output)
+        av_write_trailer(output.get());
 }
 
 } // namespace lxstreamer
