@@ -106,14 +106,14 @@ struct source_args_t {
 struct record_options_t {
     std::string   path; ///< record output dir path or file path
     file_format_t format{
-        file_format_t::unknown};    ///< preferred file format, automatically
-                                    ///< chosen if not defined
-    encoding_t video_encoding;      ///< optional video encoding for recording
-    encoding_t audio_encoding;      ///< optional audio encoding for recording
-    size_t     file_size{1024};     ///< chunk file size in mega bytes
-    size_t     file_duration{0};    ///< chunk file duration in sec
-    size_t     write_interval{300}; ///< interval for writing to file
-    bool       record_audio{true};  ///< if audio should be recorded
+        file_format_t::unknown};   ///< preferred file format, automatically
+                                   ///< chosen if not defined
+    encoding_t video_encoding;     ///< optional video encoding for recording
+    encoding_t audio_encoding;     ///< optional audio encoding for recording
+    size_t     file_size{1024};    ///< chunk file size in mega bytes
+    size_t     file_duration{0};   ///< chunk file duration in sec
+    size_t     write_interval{5};  ///< interval for writing to file in seconds
+    bool       record_audio{true}; ///< if audio should be recorded
 };
 
 } // namespace lxstreamer
