@@ -142,10 +142,10 @@ to_std_string(const mg_str& str) {
 /// logging
 //-----------------------------------------------------------------
 
-inline std::mutex                       log_mutex;
-inline log_level_t                      log_level{log_level_t::info};
-inline bool                             log_to_stdout = true;
-inline std::function<void(std::string)> log_cb{nullptr};
+inline std::mutex  log_mutex;
+inline log_level_t log_level{log_level_t::info};
+inline bool        log_to_stdout = true;
+inline std::function<void(std::string, log_level_t)> log_cb{nullptr};
 
 template <log_level_t level, typename... Args>
 inline void
@@ -160,7 +160,7 @@ log(const std::string& str, Args&&... args) {
         fprintf(out, "\n");
     }
     if (log_cb)
-        log_cb(logstr);
+        log_cb(logstr, level);
 }
 
 template <typename... Args>

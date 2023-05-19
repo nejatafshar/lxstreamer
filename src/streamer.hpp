@@ -59,8 +59,9 @@ public:
     static void set_log_level(log_level_t level);
     /// sets whether logs should be printed to std output, default is true
     static void set_log_to_stdout(bool flag);
-    /// sets a function to be called with log strings as argument
-    static void set_log_callback(std::function<void(std::string)> callback);
+    /// sets a function to be called with log strings and levels as arguments
+    static void
+    set_log_callback(std::function<void(std::string, log_level_t)> callback);
 
 private:
     struct impl;

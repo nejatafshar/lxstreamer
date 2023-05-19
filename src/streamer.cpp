@@ -119,7 +119,8 @@ streamer::set_log_to_stdout(bool flag) {
 }
 
 void
-streamer::set_log_callback(std::function<void(std::string)> callback) {
+streamer::set_log_callback(
+    std::function<void(std::string, log_level_t)> callback) {
     std::scoped_lock lock{log_mutex};
     log_cb = std::move(callback);
 }
