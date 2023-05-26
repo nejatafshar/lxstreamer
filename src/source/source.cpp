@@ -102,16 +102,16 @@ source::impl::run() {
 void
 source::impl::on_open() {
     if (is_video(iargs.video_encoding) || is_webcam) {
-        auto codec         = iargs.video_encoding.codec;
-        auto height        = iargs.video_encoding.height;
-        auto max_bandwidth = iargs.video_encoding.max_bandwidth;
+        auto codec       = iargs.video_encoding.codec;
+        auto height      = iargs.video_encoding.height;
+        auto max_bitrate = iargs.video_encoding.max_bitrate;
         if (codec == codec_t::unknown)
             codec = codec_t::h264;
-        if (max_bandwidth <= 0)
-            max_bandwidth = 2000;
-        view_encoding.video.codec         = codec;
-        view_encoding.video.height        = height;
-        view_encoding.video.max_bandwidth = max_bandwidth;
+        if (max_bitrate <= 0)
+            max_bitrate = 2000;
+        view_encoding.video.codec       = codec;
+        view_encoding.video.height      = height;
+        view_encoding.video.max_bitrate = max_bitrate;
         init_resolution(
             view_encoding.video,
             demux_data.video_stream.stream->codecpar->width,
@@ -187,16 +187,16 @@ source::impl::on_packet(const AVPacket* pkt) {
 void
 source::impl::start_recording() {
     if (is_video(record_options.video_encoding) || is_webcam) {
-        auto codec         = record_options.video_encoding.codec;
-        auto height        = record_options.video_encoding.height;
-        auto max_bandwidth = record_options.video_encoding.max_bandwidth;
+        auto codec       = record_options.video_encoding.codec;
+        auto height      = record_options.video_encoding.height;
+        auto max_bitrate = record_options.video_encoding.max_bitrate;
         if (codec == codec_t::unknown)
             codec = codec_t::h264;
-        if (max_bandwidth <= 0)
-            max_bandwidth = 2000;
-        record_encoding.video.codec         = codec;
-        record_encoding.video.height        = height;
-        record_encoding.video.max_bandwidth = max_bandwidth;
+        if (max_bitrate <= 0)
+            max_bitrate = 2000;
+        record_encoding.video.codec       = codec;
+        record_encoding.video.height      = height;
+        record_encoding.video.max_bitrate = max_bitrate;
         init_resolution(
             record_encoding.video,
             demux_data.video_stream.stream->codecpar->width,

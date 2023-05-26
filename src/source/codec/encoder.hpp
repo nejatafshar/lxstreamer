@@ -69,8 +69,7 @@ namespace std {
 template <> struct hash<lxstreamer::encoding_t> {
     auto operator()(const lxstreamer::encoding_t& h) const {
         return std::hash<lxstreamer::codec_t>{}(h.codec) ^
-               std::hash<int>{}(h.height) ^
-               std::hash<size_t>{}(h.max_bandwidth) ^
+               std::hash<int>{}(h.height) ^ std::hash<size_t>{}(h.max_bitrate) ^
                std::hash<int64_t>{}(h.sample_rate) ^
                std::hash<string>{}(h.sample_fmt) ^
                std::hash<string>{}(h.channel_layout);

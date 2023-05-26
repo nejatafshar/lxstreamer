@@ -51,7 +51,7 @@ init_resolution(encoding_t& enc, int input_width, int input_height) {
     input_height = input_height > 0 ? input_height : 8640;
 
     auto out_height = std::min(
-        enc.height > 0 ? enc.height : height_for_bitrate(enc.max_bandwidth),
+        enc.height > 0 ? enc.height : height_for_bitrate(enc.max_bitrate),
         input_height);
     if (out_height % 2 == 1) // check even
         --out_height;
@@ -200,13 +200,11 @@ struct encoder::impl {
 void
 encoder::impl::set_encoder_video_settings(
     const encoding_t& config, AVCodecContext* codec_ctx) {
-    uint64_t maxBitrate = config.max_bandwidth * 1000;
-    uint64_t bufSize    = maxBitrate * 2;
-    auto     ret        = av_opt_set_int(
-        codec_ctx,
-        "b",
-        maxBitrate / (super.is_webcam ? 4 : 2),
-        AV_OPT_SEARCH_CHILDREN);
+    uint64_t max_bitrate     = config.max_bitrate * 1000;
+    auto     average_bitrate = max_bitrate / (super.is_webcam ? 4 : 2);
+    uint64_t buf_size        = average_bitrate;
+    auto     ret =
+        av_opt_set_int(codec_ctx, "b", average_bitrate, AV_OPT_SEARCH_CHILDREN);
     if (ret != 0)
         logError(
             "failed setting encoder parameter <b> err:%d, %s",
@@ -214,21 +212,22 @@ encoder::impl::set_encoder_video_settings(
             ffmpeg_make_error_string(ret));
 
     ret = av_opt_set_int(
-        codec_ctx, "maxrate", maxBitrate, AV_OPT_SEARCH_CHILDREN);
+        codec_ctx, "maxrate", max_bitrate, AV_OPT_SEARCH_CHILDREN);
     if (ret != 0)
         logError(
             "failed setting encoder parameter <maxrate> err:%d, %s",
             ret,
             ffmpeg_make_error_string(ret));
 
-    av_opt_set_int(codec_ctx, "minrate", 1000, AV_OPT_SEARCH_CHILDREN);
-    if (ret != 0)
-        logError(
-            "failed setting encoder parameter <minrate> err:%d, %s",
-            ret,
-            ffmpeg_make_error_string(ret));
+    //    av_opt_set_int(codec_ctx, "minrate", 1000, AV_OPT_SEARCH_CHILDREN);
+    //    if (ret != 0)
+    //        logError(
+    //            "failed setting encoder parameter <minrate> err:%d, %s",
+    //            ret,
+    //            ffmpeg_make_error_string(ret));
 
-    ret = av_opt_set_int(codec_ctx, "bufsize", bufSize, AV_OPT_SEARCH_CHILDREN);
+    ret =
+        av_opt_set_int(codec_ctx, "bufsize", buf_size, AV_OPT_SEARCH_CHILDREN);
     if (ret != 0)
         logError(
             "failed setting encoder parameter <bufsize> err:%d, %s",

@@ -59,7 +59,7 @@ struct encoding_t {
     // video only
     int    width{0};
     int    height{0};
-    size_t max_bandwidth{0};
+    size_t max_bitrate{0};
     int    frame_rate{-1};
     // audio only
     int         sample_rate{-1};
@@ -68,7 +68,7 @@ struct encoding_t {
 
     bool operator==(const encoding_t& o) const {
         return codec == o.codec && codec == o.codec && width == o.width &&
-               height == o.height && max_bandwidth == o.max_bandwidth &&
+               height == o.height && max_bitrate == o.max_bitrate &&
                frame_rate == o.frame_rate && sample_rate == o.sample_rate &&
                sample_fmt == o.sample_fmt && channel_layout == o.channel_layout;
     }
