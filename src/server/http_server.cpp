@@ -47,18 +47,19 @@ to_http_error(const std::error_code& ec) {
     return http_error_t::bad_request;
 }
 
+const constexpr int Init_Try_Max = 20;
+
 } // namespace
 
 struct http_server::impl {
     streamer_data&          super;
     std::unique_ptr<mg_mgr> mgr{nullptr};
     std::thread             worker;
-    mg_connection*          listener = nullptr;
+    mg_connection*          listener       = nullptr;
+    inline static bool      initialized    = false;
+    int                     init_try_count = 0;
 
-    explicit impl(streamer_data& s) : super{s} {
-        mgr = std::make_unique<mg_mgr>();
-        mg_mgr_init(mgr.get(), nullptr);
-    }
+    explicit impl(streamer_data& s) : super{s} {}
     ~impl() {
         if (worker.joinable())
             worker.join();
@@ -67,6 +68,7 @@ struct http_server::impl {
 
     bool setup();
     void prepare_ssl_cert_pathes();
+    void initServer();
 
     static void http_callback(mg_connection* mc, int ev, void* opaque) {
         if (ev == MG_EV_HTTP_REQUEST) {
@@ -95,6 +97,16 @@ struct http_server::impl {
         } else if (ev == MG_EV_CLOSE) {
         }
     }
+
+    static void connect_handler(mg_connection* nc, int ev, void*) {
+        auto* self = reinterpret_cast<impl*>(nc->user_data);
+        if (ev == MG_EV_SEND) {
+            nc->flags |= MG_F_SEND_AND_CLOSE;
+            initialized = true;
+            logInfo("https server listening on port: %d", self->super.port);
+        } else if (ev == MG_EV_CLOSE && !initialized)
+            self->initServer();
+    }
 };
 
 http_server::http_server(streamer_data& s) : pimpl{std::make_unique<impl>(s)} {}
@@ -103,6 +115,9 @@ http_server::~http_server() {}
 
 bool
 http_server::impl::setup() {
+    mgr = std::make_unique<mg_mgr>();
+    mg_mgr_init(mgr.get(), nullptr);
+
     const auto& address = format_string("tcp://0.0.0.0:%d", super.port);
 
     if (super.https) {
@@ -124,8 +139,11 @@ http_server::impl::setup() {
         listener =
             mg_bind_opt(mgr.get(), address.data(), http_callback, bind_opts);
         if (listener == nullptr) {
-            logFatal(
-                "http server: failed to listen on: %s err: %s", address, err);
+            if (init_try_count == Init_Try_Max)
+                logFatal(
+                    "http server: failed to listen on: %s err: %s",
+                    address,
+                    err);
             return false;
         }
         mg_set_protocol_http_websocket(listener);
@@ -138,9 +156,8 @@ http_server::impl::setup() {
         }
         mg_set_protocol_http_websocket(listener);
         listener->user_data = this;
+        logInfo("http server listening on port: %d", super.port);
     }
-
-    logInfo("http server listening on port: %d", super.port);
 
     return true;
 }
@@ -167,9 +184,34 @@ http_server::impl::prepare_ssl_cert_pathes() {
 }
 
 void
+http_server::impl::initServer() {
+    if (++init_try_count > Init_Try_Max)
+        return;
+    if (mgr) {
+        mg_mgr_free(mgr.get());
+        mgr.reset();
+    }
+    while (!setup()) {
+        mg_mgr_free(mgr.get());
+        mgr.reset();
+    }
+
+    if (!super.https)
+        return;
+    auto client = mg_connect_ws(
+        mgr.get(),
+        connect_handler,
+        format_string("wss://127.0.0.1:%d", super.port).data(),
+        "wss",
+        nullptr);
+    if (client)
+        client->user_data = this;
+}
+
+void
 http_server::start() {
     pimpl->worker = std::thread{[&]() {
-        pimpl->setup();
+        pimpl->initServer();
         while (pimpl->super.running) {
             mg_mgr_poll(pimpl->mgr.get(), 300);
         }
