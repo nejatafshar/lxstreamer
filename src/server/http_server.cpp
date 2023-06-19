@@ -115,6 +115,7 @@ http_server::~http_server() {}
 
 bool
 http_server::impl::setup() {
+    ++init_try_count;
     mgr = std::make_unique<mg_mgr>();
     mg_mgr_init(mgr.get(), nullptr);
 
@@ -185,13 +186,15 @@ http_server::impl::prepare_ssl_cert_pathes() {
 
 void
 http_server::impl::initServer() {
-    if (++init_try_count > Init_Try_Max)
+    if (init_try_count > Init_Try_Max)
         return;
     if (mgr) {
         mg_mgr_free(mgr.get());
         mgr.reset();
     }
     while (!setup()) {
+        if (init_try_count > Init_Try_Max)
+            return;
         mg_mgr_free(mgr.get());
         mgr.reset();
     }
