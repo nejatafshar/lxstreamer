@@ -54,6 +54,7 @@ const constexpr int Init_Try_Max = 20;
 struct http_server::impl {
     streamer_data&          super;
     std::unique_ptr<mg_mgr> mgr{nullptr};
+    std::atomic_bool        running{false};
     std::thread             worker;
     mg_connection*          listener       = nullptr;
     inline static bool      initialized    = false;
@@ -105,7 +106,7 @@ struct http_server::impl {
             initialized = true;
             logInfo("https server listening on port: %d", self->super.port);
         } else if (ev == MG_EV_CLOSE && !initialized)
-            self->initServer();
+            self->running = false;
     }
 };
 
@@ -213,12 +214,24 @@ http_server::impl::initServer() {
 
 void
 http_server::start() {
+    if (pimpl->running || pimpl->worker.joinable())
+        return;
     pimpl->worker = std::thread{[&]() {
         pimpl->initServer();
-        while (pimpl->super.running) {
+        pimpl->running = true;
+        while (pimpl->super.running && pimpl->running) {
             mg_mgr_poll(pimpl->mgr.get(), 300);
         }
-        logInfo("http server finished");
+        pimpl->running = false;
+        if (pimpl->initialized)
+            logInfo("http server finished");
+        else {
+            auto th = std::thread{[&]() {
+                pimpl->worker.join();
+                start();
+            }};
+            th.detach();
+        }
     }};
 }
 
