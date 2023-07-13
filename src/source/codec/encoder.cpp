@@ -338,7 +338,7 @@ encoder::impl::encode_packets(
         if (!dec_ctx || is_audio) {
             pkt.get()->pts       = frm->pts;
             pkt.get()->dts       = pkt.get()->pts;
-            pkt.get()->duration  = is_audio ? frm->duration : AV_NOPTS_VALUE;
+            pkt.get()->duration  = is_audio ? frm->duration : 0;
             pkt.get()->time_base = frm->time_base;
         }
 
