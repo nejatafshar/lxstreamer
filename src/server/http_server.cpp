@@ -47,7 +47,7 @@ to_http_error(const std::error_code& ec) {
     return http_error_t::bad_request;
 }
 
-const constexpr int Init_Try_Max = 20;
+const constexpr int Init_Try_Max = 200;
 
 } // namespace
 
@@ -102,8 +102,8 @@ struct http_server::impl {
     static void connect_handler(mg_connection* nc, int ev, void*) {
         auto* self = reinterpret_cast<impl*>(nc->user_data);
         if (ev == MG_EV_SEND) {
-            nc->flags |= MG_F_SEND_AND_CLOSE;
             initialized = true;
+            nc->flags |= MG_F_SEND_AND_CLOSE;
             logInfo("https server listening on port: %d", self->super.port);
         } else if (ev == MG_EV_CLOSE && !initialized)
             self->running = false;
@@ -189,6 +189,7 @@ void
 http_server::impl::initServer() {
     if (init_try_count > Init_Try_Max)
         return;
+    std::this_thread::sleep_for(std::chrono::milliseconds{10});
     if (mgr) {
         mg_mgr_free(mgr.get());
         mgr.reset();
@@ -196,6 +197,7 @@ http_server::impl::initServer() {
     while (!setup()) {
         if (init_try_count > Init_Try_Max)
             return;
+        std::this_thread::sleep_for(std::chrono::milliseconds{10});
         mg_mgr_free(mgr.get());
         mgr.reset();
     }
